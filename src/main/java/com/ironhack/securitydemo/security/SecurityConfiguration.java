@@ -45,7 +45,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .mvcMatchers("/hello-world").authenticated()
                 .mvcMatchers("/goodbye-world").hasRole("ADMIN")
-                .mvcMatchers("say-hello").authenticated()
+                .mvcMatchers("/say-hello").authenticated()
                 .anyRequest().permitAll();
     }
 }
