@@ -30,8 +30,7 @@ public class AccountHolder extends User{
             @AttributeOverride(name = "country", column = @Column(name = "primary_country")),
             @AttributeOverride(name = "city", column = @Column(name = "primary_city")),
             @AttributeOverride(name = "postalCode", column = @Column(name = "primary_postal_code")),
-            @AttributeOverride(name = "street", column = @Column(name = "primary_street")),
-            @AttributeOverride(name = "streetNumber", column = @Column(name = "primary_number"))
+            @AttributeOverride(name = "street", column = @Column(name = "primary_street"))
     })
     private Address primaryAddress;
 
@@ -40,8 +39,7 @@ public class AccountHolder extends User{
         @AttributeOverride(name = "country", column = @Column(name = "mailing_country")),
         @AttributeOverride(name = "city", column = @Column(name = "mailing_city")),
         @AttributeOverride(name = "postalCode", column = @Column(name = "mailing_postal_code")),
-        @AttributeOverride(name = "street", column = @Column(name = "mailing_street")),
-        @AttributeOverride(name = "streetNumber", column = @Column(name = "street_number"))
+        @AttributeOverride(name = "street", column = @Column(name = "mailing_street"))
     })
     private Address mailingAddress;
 

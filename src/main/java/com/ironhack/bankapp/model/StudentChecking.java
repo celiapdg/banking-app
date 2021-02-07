@@ -1,7 +1,7 @@
 package com.ironhack.bankapp.model;
 
-import ch.qos.logback.core.status.Status;
 import com.ironhack.bankapp.classes.Money;
+import com.ironhack.bankapp.enums.Status;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
