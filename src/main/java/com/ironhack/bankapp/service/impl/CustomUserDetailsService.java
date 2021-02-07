@@ -1,8 +1,8 @@
-package com.ironhack.securitydemo.service.impl;
+package com.ironhack.bankapp.service.impl;
 
-import com.ironhack.securitydemo.model.User;
-import com.ironhack.securitydemo.repository.UserRepository;
-import com.ironhack.securitydemo.security.CustomUserDetails;
+import com.ironhack.bankapp.model.User;
+import com.ironhack.bankapp.repository.UserRepository;
+import com.ironhack.bankapp.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

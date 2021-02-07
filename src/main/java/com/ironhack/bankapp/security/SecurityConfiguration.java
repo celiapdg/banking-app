@@ -1,6 +1,6 @@
-package com.ironhack.securitydemo.security;
+package com.ironhack.bankapp.security;
 
-import com.ironhack.securitydemo.service.impl.CustomUserDetailsService;
+import com.ironhack.bankapp.service.impl.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -32,17 +31,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         auth
                 .userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder);
-
-//                .inMemoryAuthentication()
-//                .withUser("admin").password(passwordEncoder.encode("123456")).roles("ADMIN", "USER")
-//                .and()
-//                .withUser("user").password(passwordEncoder.encode("123456")).roles("USER");
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.httpBasic();
-        http.authorizeRequests()
+        http.csrf().disable().authorizeRequests()
                 .mvcMatchers("/hello-world").authenticated()
                 .mvcMatchers("/goodbye-world").hasRole("ADMIN")
                 .mvcMatchers("/say-hello").authenticated()

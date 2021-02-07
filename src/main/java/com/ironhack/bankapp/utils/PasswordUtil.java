@@ -1,4 +1,4 @@
-package com.ironhack.securitydemo.utils;
+package com.ironhack.bankapp.utils;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;

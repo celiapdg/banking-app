@@ -1,6 +1,6 @@
-package com.ironhack.securitydemo.repository;
+package com.ironhack.bankapp.repository;
 
-import com.ironhack.securitydemo.model.User;
+import com.ironhack.bankapp.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

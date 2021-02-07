@@ -1,4 +1,4 @@
-package com.ironhack.securitydemo.model;
+package com.ironhack.bankapp.model;
 
 import javax.persistence.*;
 

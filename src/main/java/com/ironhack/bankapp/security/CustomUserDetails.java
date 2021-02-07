@@ -1,7 +1,7 @@
-package com.ironhack.securitydemo.security;
+package com.ironhack.bankapp.security;
 
-import com.ironhack.securitydemo.model.Role;
-import com.ironhack.securitydemo.model.User;
+import com.ironhack.bankapp.model.Role;
+import com.ironhack.bankapp.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
