@@ -1,4 +1,4 @@
-package com.ironhack.bankapp.model;
+package com.ironhack.bankapp.model.accounts;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.enums.Status;
+import com.ironhack.bankapp.model.users.AccountHolder;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -17,21 +18,15 @@ import java.time.LocalDate;
 
 @Entity
 @PrimaryKeyJoinColumn(name="id")
-public class Checking extends StudentChecking {
+public class Checking extends Account {
 
-    @Embedded
-    @AttributeOverrides(value ={
-            @AttributeOverride(name = "amount", column = @Column(name = "monthly_maintenance_fee_amount")),
-            @AttributeOverride(name = "currency", column = @Column(name = "monthly_maintenance_fee_currency"))
-    })
-    private final Money minimumBalance = new Money(new BigDecimal(250));
+    protected String secretKey;
+    @Enumerated(EnumType.STRING)
+    protected Status status;
 
-    @Embedded
-    @AttributeOverrides(value ={
-            @AttributeOverride(name = "amount", column = @Column(name = "minimum_balance_amount")),
-            @AttributeOverride(name = "currency", column = @Column(name = "minimum_balance_currency"))
-    })
-    private final Money monthlyMaintenance = new Money(new BigDecimal(12));
+    private static final Money minimumBalance = new Money(new BigDecimal(250));
+
+    private static final Money monthlyMaintenance = new Money(new BigDecimal(12));
 
     @PastOrPresent
     @NotNull
@@ -46,11 +41,17 @@ public class Checking extends StudentChecking {
 
     public Checking(Money balance,
                     AccountHolder primaryOwner,
-                    AccountHolder secondaryOwner,
-                    @NotBlank @Size(min = 4, max = 4) String secretKey,
-                    Status status) {
-        super(balance, primaryOwner, secondaryOwner, secretKey, status);
+                    String secretKey) {
+        super(balance, primaryOwner);
+        this.secretKey = secretKey;
+        this.status = Status.ACTIVE;
         setBelowMinimumBalance();
+        this.lastMaintenanceDate = LocalDate.now();
+    }
+
+    @Override
+    public void setBalance(Money balance) {
+        super.setBalance(balance);
     }
 
     public Money getMinimumBalance() {
@@ -80,4 +81,5 @@ public class Checking extends StudentChecking {
     public void setLastMaintenanceDate(LocalDate lastMaintenanceDate) {
         this.lastMaintenanceDate = lastMaintenanceDate;
     }
+
 }

@@ -1,20 +1,18 @@
-package com.ironhack.bankapp.model;
+package com.ironhack.bankapp.model.accounts;
 
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.enums.Status;
+import com.ironhack.bankapp.model.users.AccountHolder;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 @Entity
 @PrimaryKeyJoinColumn(name = "id")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class StudentChecking extends Account {
-    @NotBlank
-    @Size(min = 4, max = 4)
+
     protected String secretKey;
     @Enumerated(EnumType.STRING)
     protected Status status;
@@ -24,12 +22,10 @@ public class StudentChecking extends Account {
 
     public StudentChecking(Money balance,
                            AccountHolder primaryOwner,
-                           AccountHolder secondaryOwner,
-                           @NotBlank @Size(min = 4, max = 4) String secretKey,
-                           Status status) {
-        super(balance, primaryOwner, secondaryOwner);
+                           String secretKey) {
+        super(balance, primaryOwner);
         this.secretKey = secretKey;
-        this.status = status;
+        this.status = Status.ACTIVE;
     }
 
     public String getSecretKey() {

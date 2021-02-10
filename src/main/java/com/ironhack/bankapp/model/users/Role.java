@@ -1,4 +1,4 @@
-package com.ironhack.bankapp.model;
+package com.ironhack.bankapp.model.users;
 
 import javax.persistence.*;
 
@@ -7,9 +7,9 @@ public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+    private String name; // TODO: cambiar a enum ADMIN, USER, THIRD_PARTY
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
     public Role() {

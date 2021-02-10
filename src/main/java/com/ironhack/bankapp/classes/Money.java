@@ -15,6 +15,14 @@ public class Money {
     private BigDecimal amount;
 
     /**
+     * Default class constructor
+     **/
+
+    public Money() {
+        currency = Currency.getInstance("EUR");
+    }
+
+    /**
      * Class constructor specifying amount, currency, and rounding
      **/
 
@@ -70,6 +78,6 @@ public class Money {
     }
 
     public String toString() {
-        return getCurrency().getSymbol() + " " + getAmount();
+        return getAmount() + " " + getCurrency().getSymbol();
     }
 }

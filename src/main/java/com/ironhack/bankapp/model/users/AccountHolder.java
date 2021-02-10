@@ -1,4 +1,4 @@
-package com.ironhack.bankapp.model;
+package com.ironhack.bankapp.model.users;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -6,22 +6,16 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.ironhack.bankapp.classes.Address;
+import com.ironhack.bankapp.model.accounts.Account;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Past;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
-
-import static com.ironhack.bankapp.utils.RegExp.VALID_NAME;
 
 @Entity
 @PrimaryKeyJoinColumn(name = "id")
 public class AccountHolder extends User{
-    @Past
-    @NotNull
     @JsonDeserialize(using = LocalDateDeserializer.class)
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate birth;
@@ -43,21 +37,25 @@ public class AccountHolder extends User{
     })
     private Address mailingAddress;
 
-    @OneToMany(mappedBy = "primaryOwner")
+    @OneToMany(mappedBy = "primaryOwner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Account> primaryAccounts;
+    private List<Account> primaryAccounts = new ArrayList<>();
 
-    @OneToMany(mappedBy = "secondaryOwner")
+    @OneToMany(mappedBy = "secondaryOwner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<Account> secondaryAccounts;
+    private List<Account> secondaryAccounts = new ArrayList<>();
+
+    @Transient
+    private List<Account> allAccounts = new ArrayList<>();
+
 
     public AccountHolder() {
     }
 
-    public AccountHolder(@NotNull @Pattern(regexp = VALID_NAME) String name,
-                         @NotNull @Size(min = 4, max = 36) String username,
-                         @NotNull @Size(min = 6, max = 20) String password,
-                         @Past @NotNull LocalDate birth,
+    public AccountHolder(String name,
+                         String username,
+                         String password,
+                         LocalDate birth,
                          Address primaryAddress,
                          Address mailingAddress) {
         super(name, username, password);
@@ -95,7 +93,9 @@ public class AccountHolder extends User{
     }
 
     public void setPrimaryAccounts(List<Account> primaryAccounts) {
-        this.primaryAccounts = primaryAccounts;
+        for (Account account: primaryAccounts){
+            addPrimaryAccount(account);
+        }
     }
 
     public List<Account> getSecondaryAccounts() {
@@ -103,9 +103,24 @@ public class AccountHolder extends User{
     }
 
     public void setSecondaryAccounts(List<Account> secondaryAccounts) {
-        this.secondaryAccounts = secondaryAccounts;
+        for (Account account: secondaryAccounts){
+            addSecondaryAccount(account);
+        }
     }
 
-    // todo: to string, quiza equals o hashcode
-    // todo: acceder a todas las cuentas
+    public void addPrimaryAccount(Account account){
+        this.primaryAccounts.add(account);
+        this.allAccounts.add(account);
+    }
+
+    public void addSecondaryAccount(Account account){
+        this.secondaryAccounts.add(account);
+        this.allAccounts.add(account);
+    }
+
+    public List<Account> getAllAccounts() {
+        List<Account> allAccounts = new ArrayList<Account>(this.getPrimaryAccounts());
+        allAccounts.addAll(this.getSecondaryAccounts());
+        return allAccounts;
+    }
 }

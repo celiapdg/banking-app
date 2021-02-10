@@ -1,4 +1,4 @@
-package com.ironhack.bankapp.model;
+package com.ironhack.bankapp.model.users;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,18 +16,14 @@ public class ThirdParty {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotNull
-    @Pattern(regexp = VALID_NAME)
     protected String name;
-    @NotNull
-    @Size(min = 6, max = 6)
     private String hashKey;
 
     public ThirdParty() {
     }
 
-    public ThirdParty(@NotNull @Pattern(regexp = VALID_NAME) String name,
-                      @NotNull @Size(min = 6, max = 6) String hashKey) {
+    public ThirdParty(String name,
+                      String hashKey) {
         this.name = name;
         this.hashKey = hashKey;
     }

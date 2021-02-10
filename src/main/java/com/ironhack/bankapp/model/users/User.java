@@ -1,13 +1,12 @@
-package com.ironhack.bankapp.model;
+package com.ironhack.bankapp.model.users;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import java.util.HashSet;
 import java.util.Set;
-
-import static com.ironhack.bankapp.utils.RegExp.VALID_NAME;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -15,28 +14,21 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
-    @NotBlank
-    @Pattern(regexp = VALID_NAME, message = "Not a valid name")
     protected String name;
-    @NotBlank
-    @Size(min = 4, max = 36)    // añadir que no pueda empezar por un número (exp reg)
     protected String username;
-    @NotBlank
-    @Size(min = 6, max = 20)    // mensaje indicando condiciones (exp regular?)
     protected String password;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    protected Set<Role> roles;
+    @JsonIgnore
+    protected Set<Role> roles = new HashSet<>();
 
     public User() {
     }
 
-    public User(@NotNull @Pattern(regexp = VALID_NAME) String name,
-                @NotNull @Size(min = 4, max = 36) String username,
-                @NotNull @Size(min = 6, max = 20) String password) {
+    public User(String name, String username, String password) {
         this.name = name;
         this.username = username;
-        this.password = password;
+        setPassword(password);
     }
 
     public Long getId() {
@@ -68,7 +60,8 @@ public class User {
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.password = passwordEncoder.encode(password);
     }
 
     public Set<Role> getRoles() {

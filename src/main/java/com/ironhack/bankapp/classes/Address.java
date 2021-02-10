@@ -10,7 +10,6 @@ public class Address {
     private String country;
     @NotBlank(message = "City is required")
     private String city;
-    @Digits(integer = 5, fraction = 0, message = "Not a valid postal code")
     private Integer postalCode;
     @NotBlank(message = "Street name is required")
     private String street;

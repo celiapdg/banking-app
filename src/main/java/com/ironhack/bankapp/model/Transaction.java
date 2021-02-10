@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.ironhack.bankapp.classes.Money;
+import com.ironhack.bankapp.model.accounts.Account;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -18,13 +19,13 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @ManyToOne(optional = false)
+    @ManyToOne
     private Account origin;
 
-    @NotNull
-    @ManyToOne(optional = false)
+    @ManyToOne
     private Account destination;
+
+    // todo: private String concept;
 
     @Embedded
     @AttributeOverrides(value ={

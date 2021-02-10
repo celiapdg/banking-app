@@ -11,6 +11,11 @@ public class PasswordUtil {
         return passwordEncoder.encode(plainPassword);
     }
 
+    public static String bcryptPassword(String plainPassword) {
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        return passwordEncoder.encode(plainPassword);
+    }
+
     public static void main(String[] args) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         System.out.println(passwordEncoder.encode("123456"));

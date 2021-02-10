@@ -1,4 +1,4 @@
-package com.ironhack.bankapp.model;
+package com.ironhack.bankapp.model.users;
 
 import javax.persistence.Entity;
 import javax.persistence.PrimaryKeyJoinColumn;
