@@ -4,18 +4,17 @@ import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.controller.TransactionDTO;
 import com.ironhack.bankapp.controller.accounts.dto.BalanceDTO;
 import com.ironhack.bankapp.model.Transaction;
-import com.ironhack.bankapp.model.accounts.Account;
-import com.ironhack.bankapp.model.accounts.Checking;
-import com.ironhack.bankapp.model.accounts.CreditCard;
-import com.ironhack.bankapp.model.accounts.Savings;
+import com.ironhack.bankapp.model.accounts.*;
 import com.ironhack.bankapp.model.users.AccountHolder;
 import com.ironhack.bankapp.model.users.ThirdParty;
 import com.ironhack.bankapp.model.users.User;
+import com.ironhack.bankapp.repository.TransactionRepository;
 import com.ironhack.bankapp.repository.accounts.AccountRepository;
 import com.ironhack.bankapp.repository.users.AccountHolderRepository;
 import com.ironhack.bankapp.repository.users.ThirdPartyRepository;
 import com.ironhack.bankapp.repository.users.UserRepository;
 import com.ironhack.bankapp.service.interfaces.IAccountService;
+import org.aspectj.weaver.patterns.ScopeWithTypeVariables;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -42,6 +43,8 @@ public class AccountService implements IAccountService {
     CreditCardService creditCardService;
     @Autowired
     ThirdPartyRepository thirdPartyRepository;
+    @Autowired
+    TransactionRepository transactionRepository;
 
     @Override
     public BalanceDTO checkBalance(Long id, String username) {
@@ -87,12 +90,39 @@ public class AccountService implements IAccountService {
         return new BalanceDTO(account.getBalance().getAmount());
     }
 
+    /***************************** TRANSFERENCE *******************************/
     public Transaction transfer(TransactionDTO transactionDTO, Principal principal,
                                 Optional<String> hashedKey, Optional<String> secretKey) {
 
-        Long originId = transactionDTO.getOriginId();
         Long destinationId = transactionDTO.getDestinationId();
         String destinationName = transactionDTO.getDestinationName();
+
+        Object origin = checkTransactionOrigin(transactionDTO, principal, hashedKey);
+        Object destination = checkTransactionDestination(transactionDTO, origin, hashedKey,  secretKey);
+
+        if (origin instanceof Account && destination instanceof Account){
+            return transactionRepository.save(new Transaction((Account) origin, (Account) destination,
+                                                              new Money(transactionDTO.getAmount()),
+                                                              LocalDateTime.now()));
+        }else if (origin instanceof Account && destination instanceof ThirdParty){
+            return transactionRepository.save(new Transaction((Account) origin, null,
+                                                              new Money(transactionDTO.getAmount()),
+                                                              LocalDateTime.now()));
+        }else if (origin instanceof ThirdParty && destination instanceof Account){
+            return transactionRepository.save(new Transaction(null, (Account) destination,
+                                                              new Money(transactionDTO.getAmount()),
+                                                              LocalDateTime.now()));
+        }else{
+            System.out.println("Algo salió mal");
+        }
+
+
+        return null;
+    }
+
+    public Object checkTransactionOrigin(TransactionDTO transactionDTO, Principal principal,
+                                         Optional<String> hashedKey){
+        Long originId = transactionDTO.getOriginId();
         BigDecimal amount = transactionDTO.getAmount();
 
         Object origin;
@@ -101,21 +131,21 @@ public class AccountService implements IAccountService {
             origin = thirdPartyRepository.findById(originId).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Third party not found"));
 
-            if (checkThirdPartyCredentials((ThirdParty) origin, hashedKey.get(), ((ThirdParty) origin).getName())){
-                // todo: origin ok, no hay que restarle nada, pero luego hay que comprobar la secretKey
-            }else{
+            if (!checkThirdPartyCredentials((ThirdParty) origin, hashedKey.get(), ((ThirdParty) origin).getName())){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Origin account info is wrong");
             }
-        // authenticated user. check if it is an AccountHolder
+            // authenticated user. check if it is an AccountHolder
         } else if (principal != null) {
             AccountHolder accountHolder = accountHolderRepository.findByUsername(principal.getName()).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Account holder not found"));
 
-            Account account = accountRepository.findById(originId).orElseThrow(() ->
+            origin = accountRepository.findById(originId).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
             // todo: es probable que haya que añadir el equals y el hashcode
-            if (accountHolder.getAllAccounts().contains(account)) {
-                // todo: origin ok, habría que restarle la cantidad en caso de que el destino también esté ok
+            if (accountHolder.getAllAccounts().contains(origin)) {
+                if (((Account) origin).getBalance().getAmount().compareTo(amount) < 0){
+                    throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "Not enough funds");
+                }
             } else {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this account");
             }
@@ -123,10 +153,103 @@ public class AccountService implements IAccountService {
         }else{
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong origin account. Try logging in or check " +
                     "provided credentials");
+        }
+        return origin;
+    }
 
+
+    public Object checkTransactionDestination(TransactionDTO transactionDTO, Object origin,
+                                              Optional<String> hashedKey, Optional<String> secretKey) {
+        Long destinationId = transactionDTO.getDestinationId();
+        String destinationName = transactionDTO.getDestinationName();
+
+        Object destination;
+        Boolean keyOK = false;
+        Boolean nameOK = false;
+
+        /** si está presente la secret key, asumimos que la transferencia va a ser a un account**/
+        if (origin instanceof ThirdParty){
+            destination = accountRepository.findById(destinationId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination account not found"));
+
+            String accountClass = destination.getClass().getSimpleName();
+            if (secretKey.isPresent()){
+                switch (accountClass){
+                    case "StudentChecking":
+                        if (((StudentChecking) destination).getSecretKey().equals(secretKey.get())){
+                            keyOK = true;
+                        }
+                        break;
+                    case "Checking":
+                        if (((Checking) destination).getSecretKey().equals(secretKey.get())){
+                            keyOK = true;
+                        }
+                        break;
+                    case "Savings":
+                        if (((Savings) destination).getSecretKey().equals(secretKey.get())){
+                            keyOK = true;
+                        }
+                        break;
+                    case "CreditCard":
+                        keyOK = true;
+                        break;
+                }
+            }else if(!secretKey.isPresent() && accountClass.equals("CreditCard")){
+                keyOK = true;
+            }else{
+                System.out.println("You need a secret key to transfer money to a Savings, Checking or StudentChecking account");
+            }
+
+
+            if (((Account) destination).getPrimaryOwner().getName().equals(destinationName)) {
+                nameOK = true;
+            }else if(((Account) destination).getSecondaryOwner()!=null){
+                if (((Account) destination).getSecondaryOwner().getName().equals(destinationName)) {
+                    nameOK = true;
+                }
+            }
+
+        }else if (origin instanceof Account && hashedKey.isPresent()) {
+            destination = thirdPartyRepository.findById(destinationId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Third party destination not found"));
+
+            if (((ThirdParty) destination).getHashKey().equals(hashedKey.get())){
+                keyOK = true;
+            }
+            if (((ThirdParty) destination).getName().equals(destinationName)){
+                nameOK = true;
+            }
+
+        }else if (origin instanceof Account && !hashedKey.isPresent()){
+            destination = accountRepository.findById(destinationId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination account not found"));
+
+            keyOK = true;
+
+            if (((Account) destination).getPrimaryOwner().getName().equals(destinationName)) {
+                nameOK = true;
+            }else if(((Account) destination).getSecondaryOwner()!=null){
+                if (((Account) destination).getSecondaryOwner().getName().equals(destinationName)) {
+                    nameOK = true;
+                }
+            }
+
+        }else{
+            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "baia");
         }
 
-        return null;
+        if ((nameOK&&keyOK) && !origin.equals(destination)){
+            return destination;
+        }else if(origin.equals(destination)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tontolculo");
+        }else if (!nameOK && !keyOK){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tonto");
+        }else if (!nameOK){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tonto nombre");
+        }else{
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tonto key");
+        }
+
     }
 
 

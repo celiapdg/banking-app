@@ -62,6 +62,22 @@ public class Checking extends Account {
         return monthlyMaintenance;
     }
 
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     public boolean isBelowMinimumBalance() {
         return belowMinimumBalance;
     }
