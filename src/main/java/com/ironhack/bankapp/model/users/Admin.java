@@ -15,9 +15,7 @@ public class Admin extends User {
     public Admin() {
     }
 
-    public Admin(@NotNull @Pattern(regexp = VALID_NAME) String name,
-                 @NotNull @Size(min = 4, max = 36) String username,
-                 @NotNull @Size(min = 6, max = 20) String password) {
+    public Admin(String name, String username, String password) {
         super(name, username, password);
     }
 }

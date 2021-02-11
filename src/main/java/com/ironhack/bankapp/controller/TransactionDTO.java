@@ -19,6 +19,16 @@ public class TransactionDTO {
     @DecimalMin("0.01")
     private BigDecimal amount;
 
+    public TransactionDTO() {
+    }
+
+    public TransactionDTO(@NotNull @Min(1) Long originId, @NotNull @Min(1) Long destinationId, @NotBlank String destinationName, @NotNull @DecimalMin("0.01") BigDecimal amount) {
+        this.originId = originId;
+        this.destinationId = destinationId;
+        this.destinationName = destinationName;
+        this.amount = amount;
+    }
+
     public Long getOriginId() {
         return originId;
     }

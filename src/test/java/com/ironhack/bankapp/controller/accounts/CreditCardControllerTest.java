@@ -67,9 +67,9 @@ class CreditCardControllerTest {
 
     @Test
     void create_noSecondaryOwner() throws Exception {
-        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
         CreditCardDTO creditCardDTO = new CreditCardDTO(new BigDecimal(2000),
-                accounts.get(0).getId(), null);
+                accountHolders.get(0).getId(), null);
         String body = objectMapper.writeValueAsString(creditCardDTO);
         MvcResult result = mockMvc.perform(
                 post("/new-credit-card")
@@ -83,10 +83,10 @@ class CreditCardControllerTest {
 
     @Test
     void create_twoOwners() throws Exception {
-        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
         CreditCardDTO creditCardDTO = new CreditCardDTO(new BigDecimal(2000),
-                accounts.get(0).getId(),
-                accounts.get(1).getId());
+                accountHolders.get(0).getId(),
+                accountHolders.get(1).getId());
         String body = objectMapper.writeValueAsString(creditCardDTO);
         MvcResult result = mockMvc.perform(
                 post("/new-credit-card")

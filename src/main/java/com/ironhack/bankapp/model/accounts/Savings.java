@@ -99,4 +99,9 @@ public class Savings extends Account{
     public void setLastInterestDate(LocalDate lastInterestDate) {
         this.lastInterestDate = lastInterestDate;
     }
+
+    @Override
+    public Boolean isFrozen(){
+        return this.status.equals(Status.FROZEN);
+    }
 }

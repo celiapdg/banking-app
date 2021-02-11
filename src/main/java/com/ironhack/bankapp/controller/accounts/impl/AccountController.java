@@ -30,9 +30,10 @@ public class AccountController {
         return accountService.modifyBalance(id, principal.getName(), balanceDTO);
     }
 
-    @PostMapping("/account-holder/transference")
-    @ResponseStatus(HttpStatus.OK)
-    public Transaction transfer(@RequestBody @Valid TransactionDTO transactionDTO, // TODO: dtos de las Keys?
-                                @RequestParam Optional<String> hashedKey, @RequestParam Optional<String> secretKey, Principal principal)
-    { return accountService.transfer(transactionDTO, principal, hashedKey, secretKey);}
+    @PostMapping("/transfer")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Transaction transfer(@RequestBody @Valid TransactionDTO transactionDTO,
+                                @RequestParam Optional<String> hashedKey, @RequestParam Optional<String> secretKey, Principal principal){
+        return accountService.transfer(transactionDTO, principal, hashedKey, secretKey);
+    }
 }

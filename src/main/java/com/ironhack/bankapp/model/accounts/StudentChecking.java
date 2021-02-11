@@ -43,4 +43,9 @@ public class StudentChecking extends Account {
     public void setStatus(Status status) {
         this.status = status;
     }
+
+    @Override
+    public Boolean isFrozen(){
+        return this.status.equals(Status.FROZEN);
+    }
 }

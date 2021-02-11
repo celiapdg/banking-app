@@ -46,6 +46,7 @@ public class AccountHolder extends User{
     private List<Account> secondaryAccounts = new ArrayList<>();
 
     @Transient
+    @JsonIgnore
     private List<Account> allAccounts = new ArrayList<>();
 
 
@@ -122,5 +123,15 @@ public class AccountHolder extends User{
         List<Account> allAccounts = new ArrayList<Account>(this.getPrimaryAccounts());
         allAccounts.addAll(this.getSecondaryAccounts());
         return allAccounts;
+    }
+
+    public Boolean isOwner(Long accountID){
+        List<Account> allAccounts = this.getAllAccounts();
+        for (Account account: allAccounts){
+            if (account.getId() == accountID){
+                return true;
+            }
+        }
+        return false;
     }
 }

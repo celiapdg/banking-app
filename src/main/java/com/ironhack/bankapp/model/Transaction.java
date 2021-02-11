@@ -32,7 +32,7 @@ public class Transaction {
             @AttributeOverride(name = "amount", column = @Column(name = "transaction_amount")),
             @AttributeOverride(name = "currency", column = @Column(name = "transaction_currency"))
     })
-    @NotNull
+
     private Money amount;
 
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
@@ -91,5 +91,16 @@ public class Transaction {
 
     public void setTransactionDateTime(LocalDateTime transactionDateTime) {
         this.transactionDateTime = transactionDateTime;
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "id=" + id +
+                ", origin=" + origin.getId() +
+                ", destination=" + destination.getId() +
+                ", amount=" + amount +
+                ", transactionDateTime=" + transactionDateTime +
+                '}';
     }
 }

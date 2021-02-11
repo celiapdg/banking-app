@@ -14,7 +14,6 @@ import com.ironhack.bankapp.repository.users.AccountHolderRepository;
 import com.ironhack.bankapp.repository.users.ThirdPartyRepository;
 import com.ironhack.bankapp.repository.users.UserRepository;
 import com.ironhack.bankapp.service.interfaces.IAccountService;
-import org.aspectj.weaver.patterns.ScopeWithTypeVariables;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.security.Principal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -46,16 +44,11 @@ public class AccountService implements IAccountService {
     @Autowired
     TransactionRepository transactionRepository;
 
-    @Override
     public BalanceDTO checkBalance(Long id, String username) {
         Account account = accountRepository.findById(id).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
 
-        User user = userRepository.findByUsername(username).get();
-        boolean isAdmin = user.getRoles().stream().anyMatch(role -> role.getName().equals("ADMIN"));
-
-        if (isAdmin || account.getPrimaryOwner().getUsername().equals(username) ||
-           (account.getSecondaryOwner() != null && account.getSecondaryOwner().getUsername().equals(username))){
+        if (hasPermissions(username, account)){
 
             // apply interests or fees if necessary
             if (account instanceof Savings){
@@ -94,13 +87,18 @@ public class AccountService implements IAccountService {
     public Transaction transfer(TransactionDTO transactionDTO, Principal principal,
                                 Optional<String> hashedKey, Optional<String> secretKey) {
 
-        Long destinationId = transactionDTO.getDestinationId();
-        String destinationName = transactionDTO.getDestinationName();
-
         Object origin = checkTransactionOrigin(transactionDTO, principal, hashedKey);
         Object destination = checkTransactionDestination(transactionDTO, origin, hashedKey,  secretKey);
 
+        System.out.println(origin);
+        System.out.println(destination);
+
+        System.out.println("LLEGA HASTA AQUIIII");
+        // todo: aplicar cambio de saldo y penalty fee if necessary
         if (origin instanceof Account && destination instanceof Account){
+            System.out.println(new Transaction((Account) origin, (Account) destination,
+                    new Money(transactionDTO.getAmount()),
+                    LocalDateTime.now()));
             return transactionRepository.save(new Transaction((Account) origin, (Account) destination,
                                                               new Money(transactionDTO.getAmount()),
                                                               LocalDateTime.now()));
@@ -114,12 +112,12 @@ public class AccountService implements IAccountService {
                                                               LocalDateTime.now()));
         }else{
             System.out.println("Algo salió mal");
+            return null;
         }
 
-
-        return null;
     }
 
+    /****************************** TRANSFERENCE ORIGIN ******************************/
     public Object checkTransactionOrigin(TransactionDTO transactionDTO, Principal principal,
                                          Optional<String> hashedKey){
         Long originId = transactionDTO.getOriginId();
@@ -134,22 +132,18 @@ public class AccountService implements IAccountService {
             if (!checkThirdPartyCredentials((ThirdParty) origin, hashedKey.get(), ((ThirdParty) origin).getName())){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Origin account info is wrong");
             }
-            // authenticated user. check if it is an AccountHolder
+
+        // authenticated user. check if it is a valid AccountHolder
         } else if (principal != null) {
             AccountHolder accountHolder = accountHolderRepository.findByUsername(principal.getName()).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Account holder not found"));
 
             origin = accountRepository.findById(originId).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
-            // todo: es probable que haya que añadir el equals y el hashcode
-            if (accountHolder.getAllAccounts().contains(origin)) {
-                if (((Account) origin).getBalance().getAmount().compareTo(amount) < 0){
-                    throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "Not enough funds");
-                }
-            } else {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this account");
-            }
-            /** principal null (unauthenticated user) and no hashed key provided **/
+
+            checkValidOriginAccount(accountHolder, (Account) origin, amount); // checks valid owner, funds, and status
+
+        // principal == null and no hashed key provided
         }else{
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong origin account. Try logging in or check " +
                     "provided credentials");
@@ -157,99 +151,46 @@ public class AccountService implements IAccountService {
         return origin;
     }
 
-
+    /****************************** TRANSFERENCE DESTINATION ******************************/
     public Object checkTransactionDestination(TransactionDTO transactionDTO, Object origin,
                                               Optional<String> hashedKey, Optional<String> secretKey) {
         Long destinationId = transactionDTO.getDestinationId();
         String destinationName = transactionDTO.getDestinationName();
 
         Object destination;
-        Boolean keyOK = false;
-        Boolean nameOK = false;
-
-        /** si está presente la secret key, asumimos que la transferencia va a ser a un account**/
         if (origin instanceof ThirdParty){
             destination = accountRepository.findById(destinationId).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination account not found"));
 
-            String accountClass = destination.getClass().getSimpleName();
-            if (secretKey.isPresent()){
-                switch (accountClass){
-                    case "StudentChecking":
-                        if (((StudentChecking) destination).getSecretKey().equals(secretKey.get())){
-                            keyOK = true;
-                        }
-                        break;
-                    case "Checking":
-                        if (((Checking) destination).getSecretKey().equals(secretKey.get())){
-                            keyOK = true;
-                        }
-                        break;
-                    case "Savings":
-                        if (((Savings) destination).getSecretKey().equals(secretKey.get())){
-                            keyOK = true;
-                        }
-                        break;
-                    case "CreditCard":
-                        keyOK = true;
-                        break;
-                }
-            }else if(!secretKey.isPresent() && accountClass.equals("CreditCard")){
-                keyOK = true;
-            }else{
-                System.out.println("You need a secret key to transfer money to a Savings, Checking or StudentChecking account");
-            }
-
-
-            if (((Account) destination).getPrimaryOwner().getName().equals(destinationName)) {
-                nameOK = true;
-            }else if(((Account) destination).getSecondaryOwner()!=null){
-                if (((Account) destination).getSecondaryOwner().getName().equals(destinationName)) {
-                    nameOK = true;
-                }
-            }
-
-        }else if (origin instanceof Account && hashedKey.isPresent()) {
-            destination = thirdPartyRepository.findById(destinationId).orElseThrow(() ->
-                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Third party destination not found"));
-
-            if (((ThirdParty) destination).getHashKey().equals(hashedKey.get())){
-                keyOK = true;
-            }
-            if (((ThirdParty) destination).getName().equals(destinationName)){
-                nameOK = true;
-            }
+            checkAccountCredentials((Account) destination, secretKey, destinationName);
+            checkIfFrozen((Account) destination);
 
         }else if (origin instanceof Account && !hashedKey.isPresent()){
             destination = accountRepository.findById(destinationId).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination account not found"));
 
-            keyOK = true;
+            checkAccountName((Account) destination, destinationName);
+            checkIfFrozen((Account) destination);
+        }else if (origin instanceof Account && hashedKey.isPresent()) {
 
-            if (((Account) destination).getPrimaryOwner().getName().equals(destinationName)) {
-                nameOK = true;
-            }else if(((Account) destination).getSecondaryOwner()!=null){
-                if (((Account) destination).getSecondaryOwner().getName().equals(destinationName)) {
-                    nameOK = true;
-                }
-            }
+            destination = thirdPartyRepository.findById(destinationId).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.NOT_FOUND, "Third party destination not found"));
+
+            checkThirdPartyCredentials((ThirdParty) destination, hashedKey.get(), destinationName);
 
         }else{
+            System.out.println("EXPECTATIVAS FALLIDAS HAMIJO");
             throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "baia");
         }
 
-        if ((nameOK&&keyOK) && !origin.equals(destination)){
-            return destination;
-        }else if(origin.equals(destination)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tontolculo");
-        }else if (!nameOK && !keyOK){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tonto");
-        }else if (!nameOK){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tonto nombre");
-        }else{
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tonto key");
-        }
+        System.out.println("CARACOL COL COOOOOOOOOOOOL " + !origin.equals(destination));
 
+        // todo: comprobar que esto funsione
+        if (!origin.equals(destination)){
+            return destination;
+        }else{
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "pa k kieres acer eso jaja saludos");
+        }
     }
 
 
@@ -260,26 +201,95 @@ public class AccountService implements IAccountService {
         return account;
     }
 
+
     public Account checkAccountId(Long id) {
         return accountRepository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
     }
+
 
     public boolean isAdmin(String username) {
         User user = userRepository.findByUsername(username).get();
         return user.getRoles().contains("ADMIN");
     }
 
+
     public boolean hasPermissions(String username, Account account) {
         return (isAdmin(username) || account.getPrimaryOwner().getUsername().equals(username) ||
                 (account.getSecondaryOwner() != null && account.getSecondaryOwner().getUsername().equals(username)));
     }
 
+
     public boolean checkThirdPartyCredentials(ThirdParty thirdParty, String hashedKey, String name){
+        if (!(thirdParty.getHashKey().equals(hashedKey) && thirdParty.getName().equals(name))){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong third party credentials");
+        }
         return true;
     }
 
-    public boolean checkAccountCredentials(ThirdParty thirdParty, String secretKey, String name){
+    public boolean checkValidOriginAccount(AccountHolder accountHolder, Account account, BigDecimal amount){
+        if (!accountHolder.isOwner(account.getId())){
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this account");
+        }else if (checkIfFrozen(account)){
+        }else if (!(account.hasEnoughFunds(new Money(amount)))){
+            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "Not enough funds");
+        }
         return true;
     }
+
+    public boolean checkIfFrozen(Account account){
+        if (account.isFrozen()) {
+            throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "Account frozen");
+        }
+        return false;
+    }
+
+
+    public boolean checkAccountCredentials(Account account, Optional<String> secretKey, String name){
+        return (checkAccountName(account, name) && checkAccountSecretKey(account, secretKey));
+    }
+
+
+    public boolean checkAccountName(Account account, String name){
+        if (account.getPrimaryOwner().getName().equals(name)) {
+            return true;
+        }else if(account.getSecondaryOwner()!=null){
+            if (account.getSecondaryOwner().getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public boolean checkAccountSecretKey(Account account, Optional<String> secretKey){
+        String accountClass = account.getClass().getSimpleName();
+        if (secretKey.isPresent()){
+            switch (accountClass){
+                case "StudentChecking":
+                    if (((StudentChecking) account).getSecretKey().equals(secretKey.get())){
+                        return true;
+                    }
+                    break;
+                case "Checking":
+                    if (((Checking) account).getSecretKey().equals(secretKey.get())){
+                        return true;
+                    }
+                    break;
+                case "Savings":
+                    if (((Savings) account).getSecretKey().equals(secretKey.get())){
+                        return true;
+                    }
+                    break;
+                case "CreditCard":
+                    return true;
+            }
+        }else if(!secretKey.isPresent() && accountClass.equals("CreditCard")){
+            return true;
+        }
+
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong secret key");
+
+    }
+
 }

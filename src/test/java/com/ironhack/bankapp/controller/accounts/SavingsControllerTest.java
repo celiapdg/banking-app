@@ -67,10 +67,11 @@ class SavingsControllerTest {
 
     @Test
     void create() throws Exception {
-        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
         SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
-                new BigDecimal(200), accounts.get(0).getId(),
-                accounts.get(1).getId(), "a4b5",
+                new BigDecimal(200), accountHolders.get(0).getId(),
+                accountHolders.get(1).getId(), "a4b5",
                 new BigDecimal(0.002));
         String body = objectMapper.writeValueAsString(savingsDTO);
         MvcResult result = mockMvc.perform(

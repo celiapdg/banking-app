@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.ironhack.bankapp.classes.Money;
+import com.ironhack.bankapp.enums.Status;
 import com.ironhack.bankapp.model.users.AccountHolder;
 
 import javax.persistence.*;
@@ -68,5 +69,10 @@ public class CreditCard extends Account {
 
     public void setLastInterestDate(LocalDate lastInterestDate) {
         this.lastInterestDate = lastInterestDate;
+    }
+
+    @Override
+    public Boolean isFrozen(){
+        return false;
     }
 }

@@ -1,6 +1,8 @@
 package com.ironhack.bankapp.model.accounts;
 
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.model.users.AccountHolder;
 import com.ironhack.bankapp.model.Transaction;
@@ -30,12 +32,15 @@ public abstract class Account {
     protected static final Money penaltyFee = new Money(new BigDecimal(40));
 
     @OneToMany(mappedBy = "origin")
+    @JsonIgnore
     protected List<Transaction> transactionSent;
 
     @OneToMany(mappedBy = "destination")
+    @JsonIgnore
     protected List<Transaction> transactionReceived;
 
     @Transient
+    @JsonIgnore
     protected List<Transaction> allTransactions;
 
     public Account() {
@@ -117,5 +122,15 @@ public abstract class Account {
         return allTransactions;
     }
 
+    public Boolean hasEnoughFunds(Money amount){
+        if (amount.getAmount().compareTo(this.getBalance().getAmount())>0){
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean isFrozen(){
+        return this.isFrozen();
+    }
 
 }

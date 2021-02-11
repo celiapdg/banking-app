@@ -98,4 +98,9 @@ public class Checking extends Account {
         this.lastMaintenanceDate = lastMaintenanceDate;
     }
 
+    @Override
+    public Boolean isFrozen(){
+        return this.status.equals(Status.FROZEN);
+    }
+
 }

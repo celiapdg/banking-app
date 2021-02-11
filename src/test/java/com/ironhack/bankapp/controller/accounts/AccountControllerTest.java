@@ -3,11 +3,15 @@ package com.ironhack.bankapp.controller.accounts;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ironhack.bankapp.classes.Address;
 import com.ironhack.bankapp.classes.Money;
+import com.ironhack.bankapp.controller.TransactionDTO;
 import com.ironhack.bankapp.controller.accounts.dto.BalanceDTO;
+import com.ironhack.bankapp.model.accounts.Account;
 import com.ironhack.bankapp.model.accounts.Checking;
 import com.ironhack.bankapp.model.accounts.Savings;
 import com.ironhack.bankapp.model.users.AccountHolder;
 import com.ironhack.bankapp.model.users.Role;
+import com.ironhack.bankapp.repository.TransactionRepository;
+import com.ironhack.bankapp.repository.accounts.AccountRepository;
 import com.ironhack.bankapp.repository.accounts.CheckingRepository;
 import com.ironhack.bankapp.repository.accounts.SavingsRepository;
 import com.ironhack.bankapp.repository.users.AccountHolderRepository;
@@ -25,6 +29,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -44,12 +49,14 @@ class AccountControllerTest {
     AccountHolderRepository accountHolderRepository;
     @Autowired
     RoleRepository roleRepository;
-//    @Autowired
-//    AccountRepository accountRepository;
+    @Autowired
+    AccountRepository accountRepository;
     @Autowired
     CheckingRepository checkingRepository;
     @Autowired
     SavingsRepository savingsRepository;
+    @Autowired
+    TransactionRepository transactionRepository;
 
     @BeforeEach
     void setUp() {
@@ -75,6 +82,7 @@ class AccountControllerTest {
 
     @AfterEach
     void tearDown() {
+        transactionRepository.deleteAll();
         savingsRepository.deleteAll();
         checkingRepository.deleteAll();
         roleRepository.deleteAll();
@@ -183,5 +191,26 @@ class AccountControllerTest {
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized()).andReturn();
+    }
+
+    @Test
+    void transfer() throws Exception {
+        List<Account> accounts = accountRepository.findAll();
+        TransactionDTO transactionDTO = new TransactionDTO(accounts.get(0).getId(),
+                accounts.get(1).getId(), "Celia Lumbreras", new BigDecimal("100"));
+
+        String body = objectMapper.writeValueAsString(transactionDTO);
+        System.out.println(body);
+
+        MvcResult result = mockMvc.perform(
+                post("/transfer")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("cecece")
+                                .password("cucucu")
+                                .roles("ACCOUNT_HOLDER")))
+                .andExpect(status().isCreated()).andReturn();
+
+        System.out.println(result.getResponse().getContentAsString());
     }
 }
