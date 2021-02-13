@@ -123,10 +123,18 @@ public abstract class Account {
     }
 
     public Boolean hasEnoughFunds(Money amount){
-        if (amount.getAmount().compareTo(this.getBalance().getAmount())>0){
-            return false;
+        if (this instanceof CreditCard){
+            return amount.getAmount().compareTo(this.getBalance().getAmount().add(((CreditCard) this).getCreditLimit().getAmount())) < 0;
         }
-        return true;
+        return amount.getAmount().compareTo(this.getBalance().getAmount()) < 0;
+    }
+
+    public BigDecimal increaseBalance(Money amount){
+        return this.balance.increaseAmount(amount);
+    }
+
+    public BigDecimal decreaseBalance(Money amount){
+        return this.balance.decreaseAmount(amount);
     }
 
     public Boolean isFrozen(){

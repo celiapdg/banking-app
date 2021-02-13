@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -25,37 +24,34 @@ public class SavingsService implements ISavingsService {
     private SavingsRepository savingsRepository;
 
     public Savings create(SavingsDTO savingsDTO){
+        AccountHolder primaryOwner = accountHolderRepository.findById(savingsDTO.getPrimaryId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found"));
 
-        Optional<AccountHolder> primaryOwner = accountHolderRepository.findById(savingsDTO.getAccountId());
-        if (primaryOwner.isPresent()){
-            Savings savings = new Savings(new Money(savingsDTO.getBalance()),
-                    primaryOwner.get(), savingsDTO.getSecretKey(),
-                    new Money(savingsDTO.getMinimumBalance()), savingsDTO.getInterestRate());
+        Savings savings = new Savings(new Money(savingsDTO.getBalance()),
+                primaryOwner, savingsDTO.getSecretKey(),
+                new Money(savingsDTO.getMinimumBalance()), savingsDTO.getInterestRate());
 
-            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(savingsDTO.getAccountSecondaryId());
+        Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(savingsDTO.getSecondaryId());
+        secondaryOwner.ifPresent(savings::setSecondaryOwner);
 
-            if (secondaryOwner.isPresent()){
-                savings.setSecondaryOwner(secondaryOwner.get());
-            }
+        return savingsRepository.save(savings);
 
-            return savingsRepository.save(savings);
-        }else{
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found");
-        }
     }
 
     public Savings applyInterest(Savings savings){
+        // frozen accounts cannot modify its balance
+        if (savings.isFrozen()) return savings;
+        // if the account is active, interests can apply:
         Integer interestsRemaining = TimeCalc.calculateYears(savings.getLastInterestDate());
         savings.setLastInterestDate(savings.getLastInterestDate().plusYears(interestsRemaining));
 
-        BigDecimal balanceAmount = savings.getBalance().getAmount();
-        BigDecimal interestRate = savings.getInterestRate();
-
         while (interestsRemaining > 0){
-            balanceAmount = balanceAmount.add(balanceAmount.multiply(interestRate));
+            savings.increaseBalance(new Money(savings.getBalance().getAmount().multiply(savings.getInterestRate())));
+            // todo: si quiero poner transferencias a todo, aquí iría una
             interestsRemaining--;
         }
-        savings.setBalance(new Money(balanceAmount));
+
+        savings.setBelowMinimumBalance(); // maybe the account was under minimum balance but now it's not
         return savingsRepository.save(savings);
     }
 }

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.enums.Status;
 import com.ironhack.bankapp.model.users.AccountHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -43,7 +45,7 @@ public class Savings extends Account{
                    Money minimumBalance,
                    BigDecimal interestRate) {
         super(balance, primaryOwner);
-        this.secretKey = secretKey;
+        setSecretKey(secretKey);
         this.status = Status.ACTIVE;
         this.minimumBalance = minimumBalance;
         this.interestRate = interestRate;
@@ -57,7 +59,8 @@ public class Savings extends Account{
     }
 
     public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.secretKey = passwordEncoder.encode(secretKey);
     }
 
     public Status getStatus() {
@@ -103,5 +106,19 @@ public class Savings extends Account{
     @Override
     public Boolean isFrozen(){
         return this.status.equals(Status.FROZEN);
+    }
+
+    @Override
+    public String toString() {
+        return "Savings{" +
+                "id=" + id +
+                ", balance=" + balance +
+                ", primaryOwner=" + primaryOwner +
+                ", secondaryOwner=" + secondaryOwner +
+                ", minimumBalance=" + minimumBalance +
+                ", status=" + status +
+                ", interestRate=" + interestRate +
+                ", lastInterestDate=" + lastInterestDate +
+                '}';
     }
 }

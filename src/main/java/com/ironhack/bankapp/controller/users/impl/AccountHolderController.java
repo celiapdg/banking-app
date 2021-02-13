@@ -17,11 +17,11 @@ public class AccountHolderController {
     @Autowired
     private IAccountHolderService accountHolderService;
 
-    @GetMapping("/check-balance")
-    @ResponseStatus(HttpStatus.OK)
-    public void checkBalance(@AuthenticationPrincipal User user){
-        accountHolderService.checkBalance(user);
-    }
+//    @GetMapping("/check-balance")
+//    @ResponseStatus(HttpStatus.OK)
+//    public void checkBalance(@AuthenticationPrincipal User user){
+//        accountHolderService.checkBalance(user);
+//    }
 
     @PostMapping("/new-account-holder")
     @ResponseStatus(HttpStatus.CREATED)

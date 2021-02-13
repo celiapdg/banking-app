@@ -10,6 +10,7 @@ import com.ironhack.bankapp.model.accounts.Account;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PastOrPresent;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,8 +26,6 @@ public class Transaction {
     @ManyToOne
     private Account destination;
 
-    // todo: private String concept;
-
     @Embedded
     @AttributeOverrides(value ={
             @AttributeOverride(name = "amount", column = @Column(name = "transaction_amount")),
@@ -34,6 +33,8 @@ public class Transaction {
     })
 
     private Money amount;
+
+    private String concept;
 
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
@@ -43,13 +44,27 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction(@NotNull Account origin,
-                       @NotNull Account destination,
-                       @NotNull Money amount,
+    public Transaction(Account origin,
+                       Account destination,
+                       Money amount,
+                       String concept,
                        @PastOrPresent LocalDateTime transactionDateTime) {
         this.origin = origin;
         this.destination = destination;
         this.amount = amount;
+        this.concept = concept;
+        this.transactionDateTime = transactionDateTime;
+    }
+
+    public Transaction(Account origin,
+                       Account destination,
+                       BigDecimal amount,
+                       String concept,
+                       @PastOrPresent LocalDateTime transactionDateTime) {
+        this.origin = origin;
+        this.destination = destination;
+        this.amount = new Money(amount);
+        this.concept = concept;
         this.transactionDateTime = transactionDateTime;
     }
 
@@ -85,6 +100,14 @@ public class Transaction {
         this.amount = amount;
     }
 
+    public String getConcept() {
+        return concept;
+    }
+
+    public void setConcept(String concept) {
+        this.concept = concept;
+    }
+
     public LocalDateTime getTransactionDateTime() {
         return transactionDateTime;
     }
@@ -97,9 +120,10 @@ public class Transaction {
     public String toString() {
         return "Transaction{" +
                 "id=" + id +
-                ", origin=" + origin.getId() +
-                ", destination=" + destination.getId() +
+                ", origin=" + origin +
+                ", destination=" + destination +
                 ", amount=" + amount +
+                ", concept='" + concept + '\'' +
                 ", transactionDateTime=" + transactionDateTime +
                 '}';
     }

@@ -3,6 +3,8 @@ package com.ironhack.bankapp.model.accounts;
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.enums.Status;
 import com.ironhack.bankapp.model.users.AccountHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -24,7 +26,7 @@ public class StudentChecking extends Account {
                            AccountHolder primaryOwner,
                            String secretKey) {
         super(balance, primaryOwner);
-        this.secretKey = secretKey;
+        setSecretKey(secretKey);
         this.status = Status.ACTIVE;
     }
 
@@ -33,7 +35,8 @@ public class StudentChecking extends Account {
     }
 
     public void setSecretKey(String secretKey) {
-        this.secretKey = secretKey;
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.secretKey = passwordEncoder.encode(secretKey);
     }
 
     public Status getStatus() {

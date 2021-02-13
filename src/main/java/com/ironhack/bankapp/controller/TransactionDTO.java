@@ -18,15 +18,22 @@ public class TransactionDTO {
     @NotNull
     @DecimalMin("0.01")
     private BigDecimal amount;
+    @NotNull
+    private String concept;
 
     public TransactionDTO() {
     }
 
-    public TransactionDTO(@NotNull @Min(1) Long originId, @NotNull @Min(1) Long destinationId, @NotBlank String destinationName, @NotNull @DecimalMin("0.01") BigDecimal amount) {
+    public TransactionDTO(@NotNull @Min(1) Long originId,
+                          @NotNull @Min(1) Long destinationId,
+                          @NotBlank String destinationName,
+                          @NotNull @DecimalMin("0.01") BigDecimal amount,
+                          @NotNull String concept) {
         this.originId = originId;
         this.destinationId = destinationId;
         this.destinationName = destinationName;
         this.amount = amount;
+        this.concept = concept;
     }
 
     public Long getOriginId() {
@@ -59,5 +66,13 @@ public class TransactionDTO {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getConcept() {
+        return concept;
+    }
+
+    public void setConcept(String concept) {
+        this.concept = concept;
     }
 }

@@ -28,61 +28,51 @@ public class CheckingService implements ICheckingService {
     private CheckingRepository checkingRepository;
     @Autowired
     private StudentCheckingRepository studentCheckingRepository;
+    @Autowired
+    private AccountService accountService;
 
     public Account create(CheckingDTO checkingDTO) {
-        if (checkingDTO.getAccountId() != null){
-            Optional<AccountHolder> primaryOwner = accountHolderRepository.findById(checkingDTO.getAccountId());
+        AccountHolder primaryOwner = accountHolderRepository.findById(checkingDTO.getPrimaryId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found"));
 
-            if (primaryOwner.isPresent()){
-                Account account;
-
-                if (TimeCalc.calculateYears(primaryOwner.get().getBirth()) > 23){
-                    account = new Checking(new Money(checkingDTO.getBalance()),
-                            primaryOwner.get(), checkingDTO.getSecretKey());
-                }else{
-                    account = new StudentChecking(new Money(checkingDTO.getBalance()),
-                            primaryOwner.get(), checkingDTO.getSecretKey());
-                }
-
-                if (checkingDTO.getAccountSecondaryId()!=null){
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(checkingDTO.getAccountSecondaryId());
-                    if (secondaryOwner.isPresent()){
-                        account.setSecondaryOwner(secondaryOwner.get());
-                    }
-                }
-
-                if (account instanceof Checking){
-                    return checkingRepository.save( (Checking) account);
-
-                }else if (account instanceof StudentChecking){
-                    return studentCheckingRepository.save( (StudentChecking) account);
-                }else{
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account creation failed. Check parameters");
-                }
-            }else{
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found");
-            }
+        Account account;
+        // Age check
+        if (TimeCalc.calculateYears(primaryOwner.getBirth()) > 23){
+            account = new Checking(new Money(checkingDTO.getBalance()),
+                    primaryOwner, checkingDTO.getSecretKey());
         }else{
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Primary account owner id cannot be null");
+            account = new StudentChecking(new Money(checkingDTO.getBalance()),
+                    primaryOwner, checkingDTO.getSecretKey());
+        }
+
+        if (checkingDTO.getSecondaryId()!=null){
+            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(checkingDTO.getSecondaryId());
+            secondaryOwner.ifPresent(account::setSecondaryOwner);
+        }
+
+        if (account instanceof Checking){
+            return checkingRepository.save((Checking) account);
+        }else if (account instanceof StudentChecking){
+            return studentCheckingRepository.save((StudentChecking) account);
+        }else{
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account creation failed. Check parameters");
         }
 
     }
 
+
     public Checking applyMonthlyFee(Checking checking){
+        // frozen accounts cannot modify its balance
+        if (checking.isFrozen()) return checking;
+        // if the account is active, monthly fee can apply:
         Integer feesRemaining = TimeCalc.calculateMonths(checking.getLastMaintenanceDate());
         checking.setLastMaintenanceDate(checking.getLastMaintenanceDate().plusMonths(feesRemaining));
 
-        BigDecimal balanceAmount = checking.getBalance().getAmount();
         while (feesRemaining > 0){
-            balanceAmount = balanceAmount.subtract(checking.getMonthlyMaintenance().getAmount());
+            checking.decreaseBalance(checking.getMonthlyMaintenance());
             feesRemaining--;
         }
-        // if the account wasn't below minimum balance, but now is
-        if (!checking.isBelowMinimumBalance()&&(balanceAmount.compareTo(checking.getMinimumBalance().getAmount()) < 0)){
-            balanceAmount.subtract(checking.getPenaltyFee().getAmount());
-        }
-        checking.setBalance(new Money(balanceAmount));
-        checking.setBelowMinimumBalance();
+        checking = (Checking) accountService.checkIfPenaltyFeeApplies(checking);
         return checkingRepository.save(checking);
     }
 }

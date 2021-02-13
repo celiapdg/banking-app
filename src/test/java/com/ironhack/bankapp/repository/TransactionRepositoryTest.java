@@ -76,13 +76,13 @@ class TransactionRepositoryTest {
                 new BigDecimal(0.1));
         savingsRepository.save(savings);
 
-        Transaction transaction1 = new Transaction(checking, savings, new Money(new BigDecimal("100")),
-                LocalDateTime.of(2020, 10, 8, 1, 1, 7));
-        Transaction transaction2 = new Transaction(checking, savings, new Money(new BigDecimal("150")),
-                LocalDateTime.of(2020, 10, 10, 1, 1, 1));
-        Transaction transaction3 = new Transaction(checking, savings, new Money(new BigDecimal("250")),
+        Transaction transaction1 = new Transaction(checking, savings, new Money(new BigDecimal("500")), "De mí, pa ti",
+                LocalDateTime.now().minusHours(12));
+        Transaction transaction2 = new Transaction(checking, savings, new Money(new BigDecimal("150")), "De mí, pa ti",
+                LocalDateTime.now().minusHours(8));
+        Transaction transaction3 = new Transaction(checking, savings, new Money(new BigDecimal("250")), "De mí, pa ti",
                 LocalDateTime.now());
-        Transaction transaction4 = new Transaction(checking, savings, new Money(new BigDecimal("150")),
+        Transaction transaction4 = new Transaction(checking, savings, new Money(new BigDecimal("150")), "De mí, pa ti",
                 LocalDateTime.now());
         transactionRepository.saveAll(List.of(transaction1, transaction2, transaction3, transaction4));
 
@@ -97,24 +97,14 @@ class TransactionRepositoryTest {
         accountHolderRepository.deleteAll();
     }
 
-    @Test
-    void findByOriginIdOrderByTransactionDateTimeDesc_yupi() {
-        List<Account> accountList = accountRepository.findAll();
-        List<Transaction> transactionList = transactionRepository.findByOriginIdOrderByTransactionDateTimeDesc(accountList.get(0).getId());
-
-        Timestamp ts1 = Timestamp.valueOf(transactionList.get(0).getTransactionDateTime());
-        Timestamp ts2 = Timestamp.valueOf(transactionList.get(1).getTransactionDateTime());
-
-
-        System.out.println(ts1.getTime() - ts2.getTime());
-        for (Transaction transaction: transactionList){
-            System.out.println(transaction);
-        }
-    }
 
     @Test
     void groupTransactionsByDate(){
         List<Account> accountList = accountRepository.findAll();
+        List<Object[]> maxTotal = transactionRepository.maxAmountInADay(accountList.get(0).getId());
+        System.out.println("max: " + maxTotal.get(0)[1]);
+        List<Object[]> lastDay = transactionRepository.totalAmountLastDay(accountList.get(0).getId());
+        System.out.println("last day: " + lastDay.get(0)[1]);
         List<Object[]> prueba = transactionRepository.totalTransactionsLastSecond(accountList.get(0).getId());
         System.out.println(prueba.size());
         System.out.println(prueba.get(0).length);

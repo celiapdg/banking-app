@@ -51,6 +51,7 @@ public class AccountHolder extends User{
 
 
     public AccountHolder() {
+        this.addRole(new Role("ACCOUNT_HOLDER", this));
     }
 
     public AccountHolder(String name,
@@ -63,6 +64,7 @@ public class AccountHolder extends User{
         this.birth = birth;
         this.primaryAddress = primaryAddress;
         this.mailingAddress = mailingAddress;
+        this.addRole(new Role("ACCOUNT_HOLDER", this));
     }
 
     public LocalDate getBirth() {

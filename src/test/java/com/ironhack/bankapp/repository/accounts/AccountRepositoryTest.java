@@ -79,18 +79,12 @@ class AccountRepositoryTest {
 
     @Test
     void checkBalanceAll() {
-        List <Object[]> result = accountRepository.checkBalanceAll();
+        List <Object[]> result = accountRepository.checkBalanceAll(accountHolderRepository.findAll().get(0).getId());
+        System.out.println(result.size());
         System.out.println(result.get(0)[0] + " " + result.get(0)[1]);
         System.out.println(result.get(1)[0] + " " + result.get(1)[1]);
     }
 
-    @Test
-    void findAll() {
-        List <Account> result = accountRepository.findAll();
-        Checking account1 = (Checking) result.get(0);
-        Checking account2 = (Checking) result.get(0);
-        assertTrue(account1.equals(account2));
-    }
 
     // test de isFrozen
 }

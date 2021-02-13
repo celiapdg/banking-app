@@ -13,9 +13,11 @@ import static com.ironhack.bankapp.utils.RegExp.VALID_NAME;
 public class Admin extends User {
 
     public Admin() {
+        this.addRole(new Role("ADMIN", this));
     }
 
     public Admin(String name, String username, String password) {
         super(name, username, password);
+        this.addRole(new Role("ADMIN", this));
     }
 }

@@ -12,20 +12,20 @@ public class AccountDTO {
 
     @Min(1)
     @NotNull
-    private Long accountId; //primary owner
+    private Long primaryId; //primary owner
 
     @Min(1)
-    private Long accountSecondaryId; //secondary owner
+    private Long secondaryId; //secondary owner
 
     public AccountDTO() {
     }
 
     public AccountDTO(@NotNull @DecimalMin(value = "0", message = "Balance must be above 0") BigDecimal balance,
-                      @Min(1) @NotNull Long accountId,
-                      @Min(1) Long accountSecondaryId) {
+                      @Min(1) @NotNull Long primaryId,
+                      @Min(1) Long secondaryId) {
         this.balance = balance;
-        this.accountId = accountId;
-        this.accountSecondaryId = accountSecondaryId;
+        this.primaryId = primaryId;
+        this.secondaryId = secondaryId;
     }
 
     public BigDecimal getBalance() {
@@ -36,19 +36,19 @@ public class AccountDTO {
         this.balance = balance;
     }
 
-    public Long getAccountId() {
-        return accountId;
+    public Long getPrimaryId() {
+        return primaryId;
     }
 
-    public void setAccountId(Long accountId) {
-        this.accountId = accountId;
+    public void setPrimaryId(Long primaryId) {
+        this.primaryId = primaryId;
     }
 
-    public Long getAccountSecondaryId() {
-        return accountSecondaryId;
+    public Long getSecondaryId() {
+        return secondaryId;
     }
 
-    public void setAccountSecondaryId(Long accountSecondaryId) {
-        this.accountSecondaryId = accountSecondaryId;
+    public void setSecondaryId(Long secondaryId) {
+        this.secondaryId = secondaryId;
     }
 }

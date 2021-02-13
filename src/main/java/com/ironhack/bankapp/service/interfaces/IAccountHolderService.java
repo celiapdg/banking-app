@@ -6,6 +6,4 @@ import com.ironhack.bankapp.model.users.User;
 
 public interface IAccountHolderService {
     AccountHolder create(AccountHolderDTO accountHolderDTO);
-
-    void checkBalance(User user);
 }

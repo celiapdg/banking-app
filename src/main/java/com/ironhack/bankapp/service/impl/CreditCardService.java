@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 
 @Service
@@ -26,41 +27,33 @@ public class CreditCardService implements ICreditCardService {
     private CreditCardRepository creditCardRepository;
 
     public CreditCard create(CreditCardDTO creditCardDTO) {
-        if (creditCardDTO.getAccountId() != null){
-            Optional<AccountHolder> primaryOwner = accountHolderRepository.findById(creditCardDTO.getAccountId());
+        AccountHolder primaryOwner = accountHolderRepository.findById(creditCardDTO.getPrimaryId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found"));
 
-            if (primaryOwner.isPresent()){
-                CreditCard account = new CreditCard(new Money(creditCardDTO.getBalance()),
-                        primaryOwner.get(), creditCardDTO.getInterestRate(),
-                        new Money(creditCardDTO.getCreditLimit()));
+        CreditCard account = new CreditCard(new Money(creditCardDTO.getBalance()),
+                primaryOwner, creditCardDTO.getInterestRate(),
+                new Money(creditCardDTO.getCreditLimit()));
 
-                if (creditCardDTO.getAccountSecondaryId()!=null){
-                    Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(creditCardDTO.getAccountSecondaryId());
-                    if (secondaryOwner.isPresent()){
-                        account.setSecondaryOwner(secondaryOwner.get());
-                    }
-                }
-                return creditCardRepository.save(account);
-            }else{
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found");
-            }
-        }else{
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Primary account owner id cannot be null");
+        if (creditCardDTO.getSecondaryId()!=null){
+            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(creditCardDTO.getSecondaryId());
+            secondaryOwner.ifPresent(account::setSecondaryOwner);
         }
+        return creditCardRepository.save(account);
+
     }
 
     public CreditCard applyInterest(CreditCard creditCard){
         Integer interestsRemaining = TimeCalc.calculateMonths(creditCard.getLastInterestDate());
         creditCard.setLastInterestDate(creditCard.getLastInterestDate().plusMonths(interestsRemaining));
 
-        BigDecimal balanceAmount = creditCard.getBalance().getAmount();
-        BigDecimal interestRate = creditCard.getInterestRate().divide(new BigDecimal(12));
-
+        BigDecimal interestRate = creditCard.getInterestRate()
+                                            .divide(new BigDecimal(12))
+                                            .setScale(4, RoundingMode.HALF_UP);
         while (interestsRemaining > 0){
-            balanceAmount = balanceAmount.add(balanceAmount.multiply(interestRate));
+            creditCard.setBalance(new Money(creditCard.getBalance().getAmount().multiply(interestRate)));
+            // todo: si quiero poner transferencias a todo, aquí iría una
             interestsRemaining--;
         }
-        creditCard.setBalance(new Money(balanceAmount));
         return creditCardRepository.save(creditCard);
     }
 }

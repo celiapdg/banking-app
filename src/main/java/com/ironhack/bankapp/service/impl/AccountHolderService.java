@@ -37,11 +37,4 @@ public class AccountHolderService implements IAccountHolderService {
 
         return accountHolderRepository.save(accountHolder);
     }
-
-    @Override
-    public void checkBalance(User user) {
-        if (user.getRoles().contains("ADMIN")){
-
-        }
-    }
 }
