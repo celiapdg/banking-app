@@ -31,9 +31,10 @@ public class SavingsService implements ISavingsService {
                 primaryOwner, savingsDTO.getSecretKey(),
                 new Money(savingsDTO.getMinimumBalance()), savingsDTO.getInterestRate());
 
-        Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(savingsDTO.getSecondaryId());
-        secondaryOwner.ifPresent(savings::setSecondaryOwner);
-
+        if (savingsDTO.getSecondaryId()!=null) {
+            Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(savingsDTO.getSecondaryId());
+            secondaryOwner.ifPresent(savings::setSecondaryOwner);
+        }
         return savingsRepository.save(savings);
 
     }

@@ -2,10 +2,12 @@ package com.ironhack.bankapp.service.impl;
 
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.controller.accounts.dto.CheckingDTO;
+import com.ironhack.bankapp.model.Transaction;
 import com.ironhack.bankapp.model.accounts.Account;
 import com.ironhack.bankapp.model.accounts.Checking;
 import com.ironhack.bankapp.model.accounts.StudentChecking;
 import com.ironhack.bankapp.model.users.AccountHolder;
+import com.ironhack.bankapp.repository.TransactionRepository;
 import com.ironhack.bankapp.repository.accounts.CheckingRepository;
 import com.ironhack.bankapp.repository.accounts.StudentCheckingRepository;
 import com.ironhack.bankapp.repository.users.AccountHolderRepository;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,6 +34,8 @@ public class CheckingService implements ICheckingService {
     private StudentCheckingRepository studentCheckingRepository;
     @Autowired
     private AccountService accountService;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     public Account create(CheckingDTO checkingDTO) {
         AccountHolder primaryOwner = accountHolderRepository.findById(checkingDTO.getPrimaryId()).orElseThrow(
@@ -52,10 +58,8 @@ public class CheckingService implements ICheckingService {
 
         if (account instanceof Checking){
             return checkingRepository.save((Checking) account);
-        }else if (account instanceof StudentChecking){
+        }else{ //StudentChecking
             return studentCheckingRepository.save((StudentChecking) account);
-        }else{
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account creation failed. Check parameters");
         }
 
     }
@@ -66,12 +70,15 @@ public class CheckingService implements ICheckingService {
         if (checking.isFrozen()) return checking;
         // if the account is active, monthly fee can apply:
         Integer feesRemaining = TimeCalc.calculateMonths(checking.getLastMaintenanceDate());
-        checking.setLastMaintenanceDate(checking.getLastMaintenanceDate().plusMonths(feesRemaining));
-
+        List<Transaction> monthlyFees = new ArrayList<>();
         while (feesRemaining > 0){
             checking.decreaseBalance(checking.getMonthlyMaintenance());
+            checking.setLastMaintenanceDate(checking.getLastMaintenanceDate().plusMonths(1));
+            monthlyFees.add(new Transaction(checking, null, checking.getMonthlyMaintenance(),
+                                    "Maintenance fee", checking.getLastMaintenanceDate().atTime(0,0)));
             feesRemaining--;
         }
+        System.out.println(checking.getBalance());
         checking = (Checking) accountService.checkIfPenaltyFeeApplies(checking);
         return checkingRepository.save(checking);
     }

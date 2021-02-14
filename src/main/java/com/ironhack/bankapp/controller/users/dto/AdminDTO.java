@@ -1,28 +1,31 @@
 package com.ironhack.bankapp.controller.users.dto;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+
+import static com.ironhack.bankapp.utils.RegExp.*;
 
 public class AdminDTO {
     @NotBlank
-    //@Pattern(regexp = VALID_NAME, message = "Not a valid name")
+    @Pattern(regexp = VALID_NAME, message = "Not a valid name")
     @Size(max = 100)
     private String name;
 
     @NotBlank
-    //@Size(min = 4, max = 35)    // añadir que no pueda empezar por un número (exp reg)
+    @Pattern(regexp = VALID_USERNAME, message = "Not a valid username")
     private String username;
 
     @NotBlank
-    //@Size(min = 6, max = 20)    // mensaje indicando condiciones (exp regular?)
+    @Pattern(regexp = VALID_PASSWORD, message = "Not a valid password")
     private String password;
 
     public AdminDTO() {
     }
 
-    public AdminDTO(@NotBlank @Size(max = 100) String name,
-                    @NotBlank String username,
-                    @NotBlank String password) {
+    public AdminDTO(@NotBlank @Size(max = 100) @Pattern(regexp = VALID_NAME, message = "Not a valid name") String name,
+                    @NotBlank @Pattern(regexp = VALID_USERNAME, message = "Not a valid username") String username,
+                    @NotBlank @Pattern(regexp = VALID_PASSWORD, message = "Not a valid hash key") String password) {
         this.name = name;
         this.username = username;
         this.password = password;

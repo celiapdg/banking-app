@@ -1,20 +1,26 @@
 package com.ironhack.bankapp.controller.users.dto;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
+import static com.ironhack.bankapp.utils.RegExp.VALID_PASSWORD;
+import static com.ironhack.bankapp.utils.RegExp.VALID_USERNAME;
+
 public class ThirdPartyDTO {
-    @NotNull
+    @NotBlank
+    @Pattern(regexp = VALID_USERNAME, message = "Not a valid third party name")
     protected String name;
     @NotNull
-    @Size(min = 6, max = 6)
+    @Pattern(regexp = VALID_PASSWORD, message = "Not a valid hash key")
     private String hashKey;
 
     public ThirdPartyDTO() {
     }
 
     public ThirdPartyDTO(@NotNull String name,
-                         @NotNull @Size(min = 6, max = 6) String hashKey) {
+                         @NotNull @Pattern(regexp = VALID_PASSWORD, message = "Not a valid hash key") String hashKey) {
         this.name = name;
         this.hashKey = hashKey;
     }

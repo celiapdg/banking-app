@@ -7,6 +7,8 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.ironhack.bankapp.classes.Address;
 import com.ironhack.bankapp.model.accounts.Account;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
 import java.time.LocalDate;
@@ -38,10 +40,12 @@ public class AccountHolder extends User{
     private Address mailingAddress;
 
     @OneToMany(mappedBy = "primaryOwner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SUBSELECT)
     @JsonIgnore
     private List<Account> primaryAccounts = new ArrayList<>();
 
     @OneToMany(mappedBy = "secondaryOwner", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Fetch(FetchMode.SUBSELECT)
     @JsonIgnore
     private List<Account> secondaryAccounts = new ArrayList<>();
 
@@ -49,11 +53,16 @@ public class AccountHolder extends User{
     @JsonIgnore
     private List<Account> allAccounts = new ArrayList<>();
 
-
+    /**
+     * Default class constructor
+     **/
     public AccountHolder() {
         this.addRole(new Role("ACCOUNT_HOLDER", this));
     }
 
+    /**
+     * Class constructor specifying name, username, password birth, and primary and mailing address
+     **/
     public AccountHolder(String name,
                          String username,
                          String password,
@@ -64,6 +73,7 @@ public class AccountHolder extends User{
         this.birth = birth;
         this.primaryAddress = primaryAddress;
         this.mailingAddress = mailingAddress;
+        // adds ACCOUNT_HOLDER role on creation
         this.addRole(new Role("ACCOUNT_HOLDER", this));
     }
 
@@ -96,9 +106,7 @@ public class AccountHolder extends User{
     }
 
     public void setPrimaryAccounts(List<Account> primaryAccounts) {
-        for (Account account: primaryAccounts){
-            addPrimaryAccount(account);
-        }
+        this.primaryAccounts = primaryAccounts;
     }
 
     public List<Account> getSecondaryAccounts() {
@@ -106,31 +114,21 @@ public class AccountHolder extends User{
     }
 
     public void setSecondaryAccounts(List<Account> secondaryAccounts) {
-        for (Account account: secondaryAccounts){
-            addSecondaryAccount(account);
-        }
+        this.secondaryAccounts = secondaryAccounts;
     }
 
-    public void addPrimaryAccount(Account account){
-        this.primaryAccounts.add(account);
-        this.allAccounts.add(account);
-    }
-
-    public void addSecondaryAccount(Account account){
-        this.secondaryAccounts.add(account);
-        this.allAccounts.add(account);
-    }
-
+    /** returns all the accounts where this account holder is primary or secondary owner*/
     public List<Account> getAllAccounts() {
         List<Account> allAccounts = new ArrayList<Account>(this.getPrimaryAccounts());
         allAccounts.addAll(this.getSecondaryAccounts());
         return allAccounts;
     }
 
+    /** checks if this account holder owns (as either primary or secondary owner) an account by its ID */
     public Boolean isOwner(Long accountID){
         List<Account> allAccounts = this.getAllAccounts();
         for (Account account: allAccounts){
-            if (account.getId() == accountID){
+            if (account.getId().equals(accountID)){
                 return true;
             }
         }

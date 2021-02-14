@@ -5,14 +5,12 @@ import com.ironhack.bankapp.classes.Address;
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.controller.users.dto.AccountHolderDTO;
 import com.ironhack.bankapp.model.Transaction;
-import com.ironhack.bankapp.model.accounts.Account;
-import com.ironhack.bankapp.model.accounts.Checking;
-import com.ironhack.bankapp.model.accounts.Savings;
+import com.ironhack.bankapp.model.accounts.*;
 import com.ironhack.bankapp.model.users.AccountHolder;
+import com.ironhack.bankapp.model.users.Admin;
 import com.ironhack.bankapp.model.users.Role;
-import com.ironhack.bankapp.repository.accounts.AccountRepository;
-import com.ironhack.bankapp.repository.accounts.CheckingRepository;
-import com.ironhack.bankapp.repository.accounts.SavingsRepository;
+import com.ironhack.bankapp.model.users.ThirdParty;
+import com.ironhack.bankapp.repository.accounts.*;
 import com.ironhack.bankapp.repository.users.AccountHolderRepository;
 import com.ironhack.bankapp.repository.users.RoleRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -52,40 +50,58 @@ class TransactionRepositoryTest {
     SavingsRepository savingsRepository;
     @Autowired
     TransactionRepository transactionRepository;
+    @Autowired
+    CreditCardRepository creditCardRepository;
+    @Autowired
+    StudentCheckingRepository studentCheckingRepository;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        AccountHolder accountHolder1 = new AccountHolder("Celia Patata", "cecece", "cecece",
-                LocalDate.of(1995, 9, 27),
-                new Address("Ezpania", "aqui", 23456, "wiwiwiwiwwi 63"),
-                new Address("Ezpania", "aqui", 23456, "wiwiwiwiwwi 63"));
-        accountHolder1.addRole(new Role("USER", accountHolder1));
-        accountHolderRepository.save(accountHolder1);
-        AccountHolderDTO accountHolderDTO = new AccountHolderDTO("cece", "cecece", "cecece",
-                LocalDate.of(1995, 9, 27),
-                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63",
-                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63");
+        Address address = new Address("Ezpania", "aqui", 23456, "wiwiwiwiwwi 63");
+        AccountHolder accountHolder1 = new AccountHolder("Celia Lumbreras", "cecece", "cecece",
+                LocalDate.of(1995, 9, 27), address, address);
+        AccountHolder accountHolder2 = new AccountHolder("Pepa Pig", "pepa", "pig",
+                LocalDate.of(1999, 9, 27), address, address);
+        AccountHolder accountHolder3 = new AccountHolder("WRONG ACC", "wrongAccount", "IAMSAD",
+                LocalDate.of(1999, 9, 27), address, address);
+        accountHolderRepository.saveAll(List.of(accountHolder1,accountHolder2,accountHolder3));
 
-        Checking checking = new Checking(new Money(new BigDecimal(2030)),
-                accountHolder1, "avs4");
+        Checking checking = new Checking(new Money(new BigDecimal(350)),
+                accountHolder1, "caca");
+        checking.setLastMaintenanceDate(LocalDate.now().minusMonths(13));
         checkingRepository.save(checking);
 
         Savings savings = new Savings(new Money(new BigDecimal(1600)),
-                accountHolder1, "bdg5", new Money(new BigDecimal(100)),
-                new BigDecimal(0.1));
+                accountHolder1, "caca", new Money(new BigDecimal(100)),
+                new BigDecimal("0.1"));
+        savings.setLastInterestDate(LocalDate.now().minusMonths(13));
         savingsRepository.save(savings);
 
-        Transaction transaction1 = new Transaction(checking, savings, new Money(new BigDecimal("500")), "De mí, pa ti",
-                LocalDateTime.now().minusHours(12));
-        Transaction transaction2 = new Transaction(checking, savings, new Money(new BigDecimal("150")), "De mí, pa ti",
-                LocalDateTime.now().minusHours(8));
-        Transaction transaction3 = new Transaction(checking, savings, new Money(new BigDecimal("250")), "De mí, pa ti",
+        StudentChecking studentChecking = new StudentChecking(new Money(new BigDecimal(2030)),
+                accountHolder2, "caca");
+        studentCheckingRepository.save(studentChecking);
+
+        CreditCard creditCard = new CreditCard(new Money(new BigDecimal(1600)),
+                accountHolder2, new BigDecimal("0.12"), new Money(new BigDecimal(100)));
+        creditCard.setLastInterestDate(LocalDate.now().minusMonths(13));
+        creditCard.setSecondaryOwner(accountHolder1);
+        creditCardRepository.save(creditCard);
+
+        Savings savings2 = new Savings(new Money(new BigDecimal(1600)),
+                accountHolder2, "caca", new Money(new BigDecimal(1000)),
+                new BigDecimal("0.1"));
+        savingsRepository.save(savings2);
+
+        Transaction transaction1 = new Transaction(checking, savings, new Money(new BigDecimal("200")), "De mí, pa ti",
+                LocalDateTime.now().minusHours(28));
+        Transaction transaction2 = new Transaction(savings2, checking, new Money(new BigDecimal("700")), "De mí, pa ti",
+                LocalDateTime.now().minusHours(28));
+        Transaction transaction3 = new Transaction(checking, savings, new Money(new BigDecimal("90")), "De mí, pa ti",
                 LocalDateTime.now());
-        Transaction transaction4 = new Transaction(checking, savings, new Money(new BigDecimal("150")), "De mí, pa ti",
+        Transaction transaction4 = new Transaction(checking, savings2, new Money(new BigDecimal("40")), "De mí, pa ti",
                 LocalDateTime.now());
         transactionRepository.saveAll(List.of(transaction1, transaction2, transaction3, transaction4));
-
     }
 
     @AfterEach
@@ -99,15 +115,32 @@ class TransactionRepositoryTest {
 
 
     @Test
-    void groupTransactionsByDate(){
+    void maxAmountInADayInTheHistoryOfMankindFromTheBeginningOfTime(){
         List<Account> accountList = accountRepository.findAll();
-        List<Object[]> maxTotal = transactionRepository.maxAmountInADay(accountList.get(0).getId());
-        System.out.println("max: " + maxTotal.get(0)[1]);
-        List<Object[]> lastDay = transactionRepository.totalAmountLastDay(accountList.get(0).getId());
-        System.out.println("last day: " + lastDay.get(0)[1]);
-        List<Object[]> prueba = transactionRepository.totalTransactionsLastSecond(accountList.get(0).getId());
-        System.out.println(prueba.size());
-        System.out.println(prueba.get(0).length);
-        System.out.println(prueba.get(0)[0] + " " + prueba.get(0)[1] + " " + prueba.get(0)[2] + " " + prueba.get(0)[3] + " " + prueba.get(0)[4] + " " + prueba.get(0)[5]);
+        List<Object[]> maxTotal = transactionRepository.maxAmountInADayInTheHistoryOfMankindFromTheBeginningOfTime(accountList.get(0).getId());
+
+        assertEquals(((BigDecimal) maxTotal.get(0)[1]).compareTo(new BigDecimal(200)), 0);
+
+        maxTotal = transactionRepository.maxAmountInADayInTheHistoryOfMankindFromTheBeginningOfTime(accountList.get(4).getId());
+        assertEquals(((BigDecimal) maxTotal.get(0)[1]).compareTo(new BigDecimal(700)), 0);
+    }
+
+    @Test
+    void totalAmountLastDay(){
+        List<Account> accountList = accountRepository.findAll();
+        List<Object[]> totalLastDay = transactionRepository.totalAmountLastDay(accountList.get(0).getId());
+
+        assertEquals(((BigDecimal) totalLastDay.get(0)[1]).compareTo(new BigDecimal(130)), 0);
+
+        totalLastDay = transactionRepository.totalAmountLastDay(accountList.get(4).getId());
+        assertEquals(totalLastDay.get(0)[1],null);
+    }
+
+    @Test
+    void totalTransactionsLastSecond(){
+        List<Account> accountList = accountRepository.findAll();
+
+        List<Object[]> prueba = transactionRepository.transactionsLastSecond(accountList.get(0).getId());
+        assertEquals(2, prueba.size());
     }
 }

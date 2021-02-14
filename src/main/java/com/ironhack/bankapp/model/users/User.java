@@ -22,9 +22,15 @@ public class User {
     @JsonIgnore
     protected Set<Role> roles = new HashSet<>();
 
+    /**
+     * Default class constructor
+     **/
     public User() {
     }
 
+    /**
+     * Class constructor specifying name, username and password.
+     **/
     public User(String name, String username, String password) {
         this.name = name;
         this.username = username;
@@ -59,6 +65,7 @@ public class User {
         return password;
     }
 
+    // automatically encrypts the secret key
     public void setPassword(String password) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         this.password = passwordEncoder.encode(password);

@@ -15,7 +15,9 @@ public class TimeCalc {
 
     public static int calculateMonths(LocalDate date) {
         if (date != null) {
-            return Period.between(date, LocalDate.now()).getMonths();
+            Integer years = Period.between(date, LocalDate.now()).getYears();
+            Integer months = years*12 + Period.between(date, LocalDate.now()).getMonths();
+            return months;
         } else {
             return 0;
         }

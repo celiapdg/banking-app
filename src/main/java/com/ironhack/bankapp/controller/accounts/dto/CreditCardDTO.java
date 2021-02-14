@@ -14,16 +14,23 @@ public class CreditCardDTO extends AccountDTO {
     @NotNull
     @DecimalMax(value = "1", message = "Interest rate must be below 1")
     @DecimalMin(value = "0.1", message = "Interest rate cannot be less than 0.1")
-    private BigDecimal interestRate;
+    private BigDecimal interestRate; // default 0.2
 
     @NotNull
     @DecimalMax(value = "100000", message = "Max credit limit is 100000")
     @DecimalMin(value = "100", message = "Minimum credit limit is 100")
     private BigDecimal creditLimit; // default 100
 
+    /**
+     * Default class constructor
+     **/
     public CreditCardDTO() {
     }
 
+    /**
+     * class constructor specifying balance, primary owner id (not nullable), secondary owner id (nullable).
+     * interest rate and credit limit are set to the default values
+     **/
     public CreditCardDTO(@NotNull @DecimalMin(value = "0", message = "Balance must be above 0") BigDecimal balance,
                          @Min(1) @NotNull Long accountId,
                          @Min(1) Long accountSecondaryId) {
@@ -32,6 +39,10 @@ public class CreditCardDTO extends AccountDTO {
         this.creditLimit = new BigDecimal(100);
     }
 
+    /**
+     * class constructor specifying balance, primary owner id (not nullable) and secondary owner id (nullable)
+     * interest rate and credit limit
+     **/
     public CreditCardDTO(@NotNull @DecimalMin(value = "0", message = "Balance must be above 0") BigDecimal balance,
                          @Min(1) @NotNull Long accountId,
                          @Min(1) Long accountSecondaryId,

@@ -6,21 +6,18 @@ import javax.validation.constraints.NotBlank;
 
 @Embeddable
 public class Address {
-    @NotBlank(message = "Country is required")
     private String country;
-    @NotBlank(message = "City is required")
     private String city;
     private Integer postalCode;
-    @NotBlank(message = "Street name is required")
     private String street;
 
     public Address() {
     }
 
-    public Address(@NotBlank(message = "Country is required") String country,
-                   @NotBlank(message = "City is required") String city,
-                   @Digits(integer = 5, fraction = 0, message = "Not a valid postal code") Integer postalCode,
-                   @NotBlank(message = "Street name is required") String street) {
+    public Address(String country,
+                   String city,
+                   Integer postalCode,
+                   String street) {
         this.country = country;
         this.city = city;
         this.postalCode = postalCode;

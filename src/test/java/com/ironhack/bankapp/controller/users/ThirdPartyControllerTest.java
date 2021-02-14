@@ -58,7 +58,35 @@ class ThirdPartyControllerTest {
         ).andExpect(status().isCreated()).andReturn();
 
         assertTrue(result.getResponse().getContentAsString().contains("holiiiiii"));
-        assertTrue(result.getResponse().getContentAsString().contains("a4b5c2"));
+    }
+
+    @Test
+    void create_nullName_badRequest() throws Exception {
+        ThirdPartyDTO thirdPartyDTO = new ThirdPartyDTO(null, "a4b5c2");
+        String body = objectMapper.writeValueAsString(thirdPartyDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-third-party")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullSecretKey_badRequest() throws Exception {
+        ThirdPartyDTO thirdPartyDTO = new ThirdPartyDTO("caracoliiii", null);
+        String body = objectMapper.writeValueAsString(thirdPartyDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-third-party")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
     }
 
     @Test

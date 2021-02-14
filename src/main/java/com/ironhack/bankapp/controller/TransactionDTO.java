@@ -21,9 +21,16 @@ public class TransactionDTO {
     @NotNull
     private String concept;
 
+    /**
+     * Default class constructor
+     **/
     public TransactionDTO() {
     }
 
+    /**
+     * Class constructor specifying origin and destination account IDs, destination name,
+     * amount and concept
+     **/
     public TransactionDTO(@NotNull @Min(1) Long originId,
                           @NotNull @Min(1) Long destinationId,
                           @NotBlank String destinationName,

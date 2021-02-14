@@ -25,6 +25,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,7 +49,7 @@ class CheckingControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
         AccountHolder accountHolder1 = new AccountHolder("Celia", "cecece", "cecece",
                 LocalDate.of(1999, 9, 27),
                 new Address("Ezpania", "aqui", 23456, "wiwiwiwiwwi 63"),
@@ -80,9 +82,10 @@ class CheckingControllerTest {
                 post("/new-checking")
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isCreated()).andReturn();
-
-        System.out.println(result.getResponse().getContentAsString());
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
 
         assertTrue(result.getResponse().getContentAsString().contains("cecece"));
         assertFalse(result.getResponse().getContentAsString().contains("cacito"));
@@ -100,9 +103,10 @@ class CheckingControllerTest {
                 post("/new-checking")
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isCreated()).andReturn();
-
-        System.out.println("kesesto " + result.getResponse().getContentAsString());
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
 
         assertTrue(result.getResponse().getContentAsString().contains("cecece"));
         assertTrue(result.getResponse().getContentAsString().contains("cacito"));
@@ -120,12 +124,143 @@ class CheckingControllerTest {
                 post("/new-checking")
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isCreated()).andReturn();
-
-        System.out.println("kesesto " + result.getResponse().getContentAsString());
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
 
         assertTrue(result.getResponse().getContentAsString().contains("cecece"));
         assertTrue(result.getResponse().getContentAsString().contains("cacito"));
         assertTrue(result.getResponse().getContentAsString().contains("monthlyMaintenance"));
     }
+
+
+    @Test
+    void create_wrongPrimaryOwnerID_notFound() throws Exception {
+        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        CheckingDTO checkingDTO = new CheckingDTO(new BigDecimal(2000),
+                accounts.get(1).getId()+123L,
+                accounts.get(0).getId(), "a4b5");
+        String body = objectMapper.writeValueAsString(checkingDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-checking")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isNotFound()).andReturn();
+
+    }
+
+    @Test
+    void create_wrongSecondaryOwnerID_accountCreated() throws Exception {
+        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        CheckingDTO checkingDTO = new CheckingDTO(new BigDecimal(2000),
+                accounts.get(1).getId(),
+                accounts.get(0).getId()+123, "a4b5");
+        String body = objectMapper.writeValueAsString(checkingDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-checking")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
+
+    }
+
+    @Test
+    void create_negativeSecondaryOwnerID_badRequest() throws Exception {
+        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        CheckingDTO checkingDTO = new CheckingDTO(new BigDecimal(2000),
+                accounts.get(1).getId(),
+                -123L, "a4b5");
+        String body = objectMapper.writeValueAsString(checkingDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-checking")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+    @Test
+    void create_negativeBalance_badRequest() throws Exception {
+        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        CheckingDTO checkingDTO = new CheckingDTO(new BigDecimal(-2000),
+                accounts.get(1).getId(),
+                accounts.get(0).getId(), "a4b5");
+        String body = objectMapper.writeValueAsString(checkingDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-checking")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+    @Test
+    void create_nullPrimaryOwnerID_badRequest() throws Exception {
+        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        CheckingDTO checkingDTO = new CheckingDTO(new BigDecimal(2000),
+                null,
+                accounts.get(0).getId(), "a4b5");
+        String body = objectMapper.writeValueAsString(checkingDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-checking")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+
+    @Test
+    void create_nullSecretKey_badRequest() throws Exception {
+        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        CheckingDTO checkingDTO = new CheckingDTO(new BigDecimal(2000),
+                accounts.get(1).getId(),
+                accounts.get(0).getId(), null);
+        String body = objectMapper.writeValueAsString(checkingDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-checking")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+    @Test
+    void create_CheckingBalanceUnderMinimum_underMinimumBalanceTrue() throws Exception {
+        List<AccountHolder> accounts = accountHolderRepository.findAll();
+        CheckingDTO checkingDTO = new CheckingDTO(new BigDecimal(50),
+                accounts.get(1).getId(),
+                accounts.get(0).getId(), "a4b5");
+        String body = objectMapper.writeValueAsString(checkingDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-checking")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
+
+        assertTrue(checkingRepository.findAll().get(0).isBelowMinimumBalance());
+    }
+
 }

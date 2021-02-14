@@ -41,9 +41,16 @@ public class Transaction {
     @PastOrPresent
     private LocalDateTime transactionDateTime;
 
+    /**
+     * Default class constructor
+     **/
     public Transaction() {
     }
 
+    /**
+     * Class constructor specifying origin and destination accounts, amount, concept and
+     * transaction date and time
+     **/
     public Transaction(Account origin,
                        Account destination,
                        Money amount,
@@ -56,17 +63,6 @@ public class Transaction {
         this.transactionDateTime = transactionDateTime;
     }
 
-    public Transaction(Account origin,
-                       Account destination,
-                       BigDecimal amount,
-                       String concept,
-                       @PastOrPresent LocalDateTime transactionDateTime) {
-        this.origin = origin;
-        this.destination = destination;
-        this.amount = new Money(amount);
-        this.concept = concept;
-        this.transactionDateTime = transactionDateTime;
-    }
 
     public Long getId() {
         return id;
@@ -116,15 +112,4 @@ public class Transaction {
         this.transactionDateTime = transactionDateTime;
     }
 
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "id=" + id +
-                ", origin=" + origin +
-                ", destination=" + destination +
-                ", amount=" + amount +
-                ", concept='" + concept + '\'' +
-                ", transactionDateTime=" + transactionDateTime +
-                '}';
-    }
 }

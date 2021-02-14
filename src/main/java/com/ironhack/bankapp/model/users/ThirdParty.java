@@ -1,5 +1,8 @@
 package com.ironhack.bankapp.model.users;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,7 +28,7 @@ public class ThirdParty {
     public ThirdParty(String name,
                       String hashKey) {
         this.name = name;
-        this.hashKey = hashKey;
+        setHashKey(hashKey);
     }
 
     public Long getId() {
@@ -48,7 +51,9 @@ public class ThirdParty {
         return hashKey;
     }
 
+    // automatically encrypts the hash key
     public void setHashKey(String hashKey) {
-        this.hashKey = hashKey;
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.hashKey = passwordEncoder.encode(hashKey);
     }
 }

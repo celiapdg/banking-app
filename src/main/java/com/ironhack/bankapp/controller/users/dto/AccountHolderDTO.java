@@ -8,20 +8,20 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 
-import static com.ironhack.bankapp.utils.RegExp.VALID_NAME;
+import static com.ironhack.bankapp.utils.RegExp.*;
 
 public class AccountHolderDTO {
     @NotBlank
-    //@Pattern(regexp = VALID_NAME, message = "Not a valid name")
+    @Pattern(regexp = VALID_NAME, message = "Not a valid name")
     @Size(max = 100)
     private String name;
 
     @NotBlank
-    //@Size(min = 4, max = 35)    // añadir que no pueda empezar por un número (exp reg)
+    @Pattern(regexp = VALID_USERNAME, message = "Not a valid username")
     private String username;
 
     @NotBlank
-    //@Size(min = 6, max = 20)    // mensaje indicando condiciones (exp regular?)
+    @Pattern(regexp = VALID_PASSWORD, message = "Not a valid password")
     private String password;
 
     @Past
@@ -55,8 +55,8 @@ public class AccountHolderDTO {
     }
 
     public AccountHolderDTO(@NotBlank @Pattern(regexp = VALID_NAME, message = "Not a valid name") @Size(max = 100) String name,
-                            @NotBlank @Size(min = 4, max = 35) String username,
-                            @NotBlank @Size(min = 6, max = 20) String password,
+                            @NotBlank @Pattern(regexp = VALID_USERNAME, message = "Not a valid username") String username,
+                            @NotBlank @Pattern(regexp = VALID_PASSWORD, message = "Not a valid password") String password,
                             @Past @NotNull LocalDate birth,
                             @NotNull @Size(max = 40) String primaryCountry,
                             @NotNull @Size(max = 60) String primaryCity,
@@ -73,8 +73,8 @@ public class AccountHolderDTO {
     }
 
     public AccountHolderDTO(@NotBlank @Pattern(regexp = VALID_NAME, message = "Not a valid name") @Size(max = 100) String name,
-                            @NotBlank @Size(min = 4, max = 35) String username,
-                            @NotBlank @Size(min = 6, max = 20) String password,
+                            @NotBlank @Pattern(regexp = VALID_USERNAME, message = "Not a valid username") String username,
+                            @NotBlank @Pattern(regexp = VALID_PASSWORD, message = "Not a valid password") String password,
                             @Past @NotNull LocalDate birth,
                             @NotNull @Size(max = 40) String primaryCountry,
                             @NotNull @Size(max = 60) String primaryCity,
@@ -84,6 +84,7 @@ public class AccountHolderDTO {
                             @Size(max = 60) String mailingCity,
                             @Digits(integer = 5, fraction = 0, message = "Not a valid postal code") Integer mailingPostalCode,
                             @Size(max = 100) String mailingStreet) {
+
         this.name = name;
         this.username = username;
         this.password = password;
@@ -92,10 +93,13 @@ public class AccountHolderDTO {
         this.primaryCity = primaryCity;
         this.primaryPostalCode = primaryPostalCode;
         this.primaryStreet = primaryStreet;
-        this.mailingCountry = mailingCountry;
-        this.mailingCity = mailingCity;
-        this.mailingPostalCode = mailingPostalCode;
-        this.mailingStreet = mailingStreet;
+        // mailing address will only be stored if all fields are not null
+        if (mailingCity!=null&&mailingCountry!=null&&mailingStreet!=null&&mailingPostalCode!=null){
+            this.mailingCountry = mailingCountry;
+            this.mailingCity = mailingCity;
+            this.mailingPostalCode = mailingPostalCode;
+            this.mailingStreet = mailingStreet;
+        }
     }
 
     public String getName() {

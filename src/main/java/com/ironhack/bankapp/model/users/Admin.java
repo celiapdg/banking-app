@@ -12,12 +12,19 @@ import static com.ironhack.bankapp.utils.RegExp.VALID_NAME;
 @PrimaryKeyJoinColumn(name = "id")
 public class Admin extends User {
 
+    /**
+     * Default class constructor
+     **/
     public Admin() {
         this.addRole(new Role("ADMIN", this));
     }
 
+    /**
+     * Class constructor specifying name, username and password.
+     **/
     public Admin(String name, String username, String password) {
         super(name, username, password);
+        // adds ADMIN role on creation
         this.addRole(new Role("ADMIN", this));
     }
 }

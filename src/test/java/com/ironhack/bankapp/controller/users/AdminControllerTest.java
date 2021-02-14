@@ -63,4 +63,75 @@ class AdminControllerTest {
         ).andExpect(status().isCreated()).andReturn();
         assertTrue(result.getResponse().getContentAsString().contains("cacito"));
     }
+
+    @Test
+    void create_nullName_created() throws Exception {
+        AdminDTO adminDTO = new AdminDTO(null, "cacito", "cecece");
+        String body = objectMapper.writeValueAsString(adminDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-admin")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullUsername_created() throws Exception {
+        AdminDTO adminDTO = new AdminDTO("Celia Lumbreras", null, "cecece");
+        String body = objectMapper.writeValueAsString(adminDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-admin")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullPassword_created() throws Exception {
+        AdminDTO adminDTO = new AdminDTO("Celia Lumbreras", "cacito", null);
+        String body = objectMapper.writeValueAsString(adminDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-admin")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_notAdmin_created() throws Exception {
+        AdminDTO adminDTO = new AdminDTO("Celia Lumbreras", "cacito", "cecece");
+        String body = objectMapper.writeValueAsString(adminDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-admin")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("NO_SOY_ADMIN"))
+        ).andExpect(status().isForbidden()).andReturn();
+    }
+
+
+    @Test
+    void create_noAuth_created() throws Exception {
+        AdminDTO adminDTO = new AdminDTO("Celia Lumbreras", "cacito", "cecece");
+        String body = objectMapper.writeValueAsString(adminDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-admin")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isUnauthorized()).andReturn();
+    }
 }

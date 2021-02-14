@@ -50,7 +50,7 @@ public class CreditCardService implements ICreditCardService {
                                             .divide(new BigDecimal(12))
                                             .setScale(4, RoundingMode.HALF_UP);
         while (interestsRemaining > 0){
-            creditCard.setBalance(new Money(creditCard.getBalance().getAmount().multiply(interestRate)));
+            creditCard.increaseBalance(new Money(creditCard.getBalance().getAmount().multiply(interestRate)));
             // todo: si quiero poner transferencias a todo, aquí iría una
             interestsRemaining--;
         }

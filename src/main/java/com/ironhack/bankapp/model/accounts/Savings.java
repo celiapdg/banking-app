@@ -36,9 +36,16 @@ public class Savings extends Account{
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate lastInterestDate;
 
+    /**
+     * Default class constructor
+     **/
     public Savings() {
     }
 
+    /**
+     * Class constructor specifying balance, primary owner, secret key,
+     * minimum balance and interest rate
+     **/
     public Savings(Money balance,
                    AccountHolder primaryOwner,
                    String secretKey,
@@ -46,9 +53,10 @@ public class Savings extends Account{
                    BigDecimal interestRate) {
         super(balance, primaryOwner);
         setSecretKey(secretKey);
-        this.status = Status.ACTIVE;
         this.minimumBalance = minimumBalance;
         this.interestRate = interestRate;
+        // default set-up:
+        this.status = Status.ACTIVE;
         setBelowMinimumBalance();
         this.lastInterestDate = LocalDate.now();
     }
@@ -58,6 +66,7 @@ public class Savings extends Account{
         return secretKey;
     }
 
+    // automatically encrypts the secret key
     public void setSecretKey(String secretKey) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         this.secretKey = passwordEncoder.encode(secretKey);

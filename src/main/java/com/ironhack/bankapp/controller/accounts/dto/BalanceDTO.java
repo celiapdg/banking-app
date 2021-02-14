@@ -9,11 +9,16 @@ public class BalanceDTO {
     @NotNull
     private BigDecimal amount;
 
+    /**
+     * Default class constructor
+     **/
     public BalanceDTO() {
     }
 
-    public BalanceDTO(@NotNull @DecimalMax(value = "100000", message = "Max credit limit is 100000")
-                      @DecimalMin(value = "100", message = "Minimum credit limit is 100") BigDecimal amount) {
+    /**
+     * Class constructor specifying amount
+     **/
+    public BalanceDTO(@NotNull @DecimalMin(value = "0", message = "Minimum balance is 0") BigDecimal amount) {
         this.amount = amount;
     }
 

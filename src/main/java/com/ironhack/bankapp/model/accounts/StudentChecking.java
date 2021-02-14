@@ -19,14 +19,21 @@ public class StudentChecking extends Account {
     @Enumerated(EnumType.STRING)
     protected Status status;
 
+    /**
+     * Default class constructor
+     **/
     public StudentChecking() {
     }
 
+    /**
+     * Class constructor specifying balance, primary owner and secret key
+     **/
     public StudentChecking(Money balance,
                            AccountHolder primaryOwner,
                            String secretKey) {
         super(balance, primaryOwner);
         setSecretKey(secretKey);
+        // default set-up:
         this.status = Status.ACTIVE;
     }
 
@@ -34,6 +41,7 @@ public class StudentChecking extends Account {
         return secretKey;
     }
 
+    // automatically encrypts the secret key
     public void setSecretKey(String secretKey) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         this.secretKey = passwordEncoder.encode(secretKey);

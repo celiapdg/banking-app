@@ -38,14 +38,21 @@ public class Checking extends Account {
 
     private boolean belowMinimumBalance;
 
+    /**
+     * Default class constructor
+     **/
     public Checking() {
     }
 
+    /**
+     * Class constructor specifying balance, primary owner and secret key
+     **/
     public Checking(Money balance,
                     AccountHolder primaryOwner,
                     String secretKey) {
         super(balance, primaryOwner);
         setSecretKey(secretKey);
+        // default set-up:
         this.status = Status.ACTIVE;
         setBelowMinimumBalance();
         this.lastMaintenanceDate = LocalDate.now();
@@ -68,6 +75,7 @@ public class Checking extends Account {
         return secretKey;
     }
 
+    // automatically encrypts the secret key
     public void setSecretKey(String secretKey) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         this.secretKey = passwordEncoder.encode(secretKey);

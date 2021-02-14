@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -75,7 +76,10 @@ class CreditCardControllerTest {
                 post("/new-credit-card")
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isCreated()).andReturn();
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
 
         assertTrue(result.getResponse().getContentAsString().contains("cecece"));
         assertFalse(result.getResponse().getContentAsString().contains("cacito"));
@@ -92,10 +96,103 @@ class CreditCardControllerTest {
                 post("/new-credit-card")
                         .content(body)
                         .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isCreated()).andReturn();
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
 
         assertTrue(result.getResponse().getContentAsString().contains("cecece"));
         assertTrue(result.getResponse().getContentAsString().contains("cacito"));
+    }
+
+
+    @Test
+    void create_wrongPrimaryOwnerID_notFound() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+        CreditCardDTO creditCardDTO = new CreditCardDTO(new BigDecimal(2000),
+                accountHolders.get(0).getId()+123,
+                accountHolders.get(1).getId());
+        String body = objectMapper.writeValueAsString(creditCardDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-credit-card")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isNotFound()).andReturn();
+    }
+
+
+    @Test
+    void create_wrongSecondaryOwnerID_accountCreated() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+        CreditCardDTO creditCardDTO = new CreditCardDTO(new BigDecimal(2000),
+                accountHolders.get(0).getId(),
+                accountHolders.get(1).getId()+123);
+        String body = objectMapper.writeValueAsString(creditCardDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-credit-card")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isCreated()).andReturn();
+    }
+
+
+    @Test
+    void create_negativeSecondaryOwnerID_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+        CreditCardDTO creditCardDTO = new CreditCardDTO(new BigDecimal(2000),
+                accountHolders.get(0).getId(),
+                -123L);
+        String body = objectMapper.writeValueAsString(creditCardDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-credit-card")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_negativeBalance_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+        CreditCardDTO creditCardDTO = new CreditCardDTO(new BigDecimal(-2000),
+                accountHolders.get(0).getId(),
+                accountHolders.get(1).getId());
+        String body = objectMapper.writeValueAsString(creditCardDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-credit-card")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullPrimaryOwnerID_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+        CreditCardDTO creditCardDTO = new CreditCardDTO(new BigDecimal(2000),
+                null,
+                accountHolders.get(1).getId());
+        String body = objectMapper.writeValueAsString(creditCardDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-credit-card")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("admin")
+                                .password("admin")
+                                .roles("ADMIN")))
+        .andExpect(status().isBadRequest()).andReturn();
     }
 
 }

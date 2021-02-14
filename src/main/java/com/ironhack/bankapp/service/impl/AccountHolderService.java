@@ -18,12 +18,12 @@ public class AccountHolderService implements IAccountHolderService {
 
     public AccountHolder create(AccountHolderDTO accountHolderDTO) {
 
-        Address primaryAddress = new Address(accountHolderDTO.getPrimaryCity(),
+        Address primaryAddress = new Address(accountHolderDTO.getPrimaryCountry(),
                 accountHolderDTO.getPrimaryCity(),
                 accountHolderDTO.getPrimaryPostalCode(),
                 accountHolderDTO.getPrimaryStreet());
 
-        Address mailingAddress = new Address(accountHolderDTO.getMailingCity(),
+        Address mailingAddress = new Address(accountHolderDTO.getMailingCountry(),
                 accountHolderDTO.getMailingCity(),
                 accountHolderDTO.getMailingPostalCode(),
                 accountHolderDTO.getMailingStreet());

@@ -17,9 +17,15 @@ public class AccountDTO {
     @Min(1)
     private Long secondaryId; //secondary owner
 
+    /**
+     * Default class constructor
+     **/
     public AccountDTO() {
     }
 
+    /**
+     * class constructor specifying balance, primary owner id (not nullable) and secondary owner id (nullable)
+     **/
     public AccountDTO(@NotNull @DecimalMin(value = "0", message = "Balance must be above 0") BigDecimal balance,
                       @Min(1) @NotNull Long primaryId,
                       @Min(1) Long secondaryId) {

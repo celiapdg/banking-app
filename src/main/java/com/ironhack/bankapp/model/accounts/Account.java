@@ -8,6 +8,8 @@ import com.ironhack.bankapp.model.users.AccountHolder;
 import com.ironhack.bankapp.model.Transaction;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -31,11 +33,11 @@ public abstract class Account {
 
     protected static final Money penaltyFee = new Money(new BigDecimal(40));
 
-    @OneToMany(mappedBy = "origin")
+    @OneToMany(mappedBy = "origin", fetch = FetchType.EAGER)
     @JsonIgnore
     protected List<Transaction> transactionSent;
 
-    @OneToMany(mappedBy = "destination")
+    @OneToMany(mappedBy = "destination", fetch = FetchType.EAGER)
     @JsonIgnore
     protected List<Transaction> transactionReceived;
 
@@ -43,9 +45,15 @@ public abstract class Account {
     @JsonIgnore
     protected List<Transaction> allTransactions;
 
+    /**
+     * Default class constructor
+     **/
     public Account() {
     }
 
+    /**
+     * Class constructor specifying balance and primary owner.
+     **/
     public Account(Money balance, AccountHolder primaryOwner) {
         this.balance = balance;
         this.primaryOwner = primaryOwner;
@@ -93,14 +101,7 @@ public abstract class Account {
     }
 
     public void setTransactionSent(List<Transaction> transactionSent) {
-        for (Transaction transaction: transactionSent){
-            addTransactionSent(transaction);
-        }
-    }
-
-    public void addTransactionSent(Transaction transaction){
-        this.transactionSent.add(transaction);
-        this.allTransactions.add(transaction);
+        this.transactionSent = transactionSent;
     }
 
     public List<Transaction> getTransactionReceived() {
@@ -108,20 +109,18 @@ public abstract class Account {
     }
 
     public void setTransactionReceived(List<Transaction> transactionReceived) {
-        for (Transaction transaction: transactionReceived){
-            addTransactionReceived(transaction);
-        }
+        this.transactionReceived = transactionReceived;
     }
 
-    public void addTransactionReceived(Transaction transaction){
-        this.transactionReceived.add(transaction);
-        this.allTransactions.add(transaction);
-    }
-
+    /** get all transactions sorted by date (most recent first) */
     public List<Transaction> getAllTransactions() {
+        List<Transaction> allTransactions = this.getTransactionReceived();
+        allTransactions.addAll(this.getTransactionSent());
+        Collections.sort(allTransactions, Comparator.comparing(Transaction::getTransactionDateTime).reversed());
         return allTransactions;
     }
 
+    /** checks if balance is more or equals to the amount provided*/
     public Boolean hasEnoughFunds(Money amount){
         if (this instanceof CreditCard){
             return amount.getAmount().compareTo(this.getBalance().getAmount().add(((CreditCard) this).getCreditLimit().getAmount())) < 0;

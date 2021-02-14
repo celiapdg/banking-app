@@ -32,18 +32,23 @@ public class CreditCard extends Account {
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate lastInterestDate;
 
+    /**
+     * Default class constructor
+     **/
     public CreditCard() {
     }
 
+    /**
+     * Class constructor specifying balance, primary owner, interest rate and credit limit
+     **/
     public CreditCard(Money balance,
                       AccountHolder primaryOwner,
-                      @NotNull @DecimalMax(value = "0.2", message = "Interest rate must be below 0.2")
-                      @DecimalMin(value = "0.1", message = "Interest rate cannot be less than 0.1") BigDecimal interestRate,
-                      @NotNull @DecimalMax(value = "100000", message = "Max credit limit is 100000")
-                      @DecimalMin(value = "100", message = "Minimum credit limit is 100") Money creditLimit) {
+                      BigDecimal interestRate,
+                      Money creditLimit) {
         super(balance, primaryOwner);
         this.interestRate = interestRate;
         this.creditLimit = creditLimit;
+        // default set-up:
         this.lastInterestDate = LocalDate.now();
     }
 

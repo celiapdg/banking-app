@@ -7,6 +7,7 @@ import com.ironhack.bankapp.model.users.AccountHolder;
 import com.ironhack.bankapp.model.users.Role;
 import com.ironhack.bankapp.repository.users.AccountHolderRepository;
 import com.ironhack.bankapp.repository.users.RoleRepository;
+import com.ironhack.bankapp.repository.users.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,8 @@ class AccountHolderControllerTest {
     AccountHolderRepository accountHolderRepository;
     @Autowired
     RoleRepository roleRepository;
+    @Autowired
+    UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
@@ -55,6 +58,8 @@ class AccountHolderControllerTest {
     void tearDown() {
         roleRepository.deleteAll();
         accountHolderRepository.deleteAll();
+        userRepository.deleteAll();
+
     }
 
     @Test
@@ -90,6 +95,119 @@ class AccountHolderControllerTest {
                                 .password("grillito")
                                 .roles("ACCOUNT_HOLDER"))
         ).andExpect(status().isForbidden()).andReturn();
+    }
+
+    @Test
+    void create_nullName_badRequest() throws Exception {
+        AccountHolderDTO accountHolderDTO = new AccountHolderDTO(null, "cacito", "cecece",
+                LocalDate.of(1995, 9, 27),
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63",
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63");
+        String body = objectMapper.writeValueAsString(accountHolderDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-account-holder")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullUsername_badRequest() throws Exception {
+        AccountHolderDTO accountHolderDTO = new AccountHolderDTO("Celia", null, "cecece",
+                LocalDate.of(1995, 9, 27),
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63",
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63");
+        String body = objectMapper.writeValueAsString(accountHolderDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-account-holder")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullPassword_badRequest() throws Exception {
+        AccountHolderDTO accountHolderDTO = new AccountHolderDTO("Celia", "cacito", null,
+                LocalDate.of(1995, 9, 27),
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63",
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63");
+        String body = objectMapper.writeValueAsString(accountHolderDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-account-holder")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullBirth_badRequest() throws Exception {
+        AccountHolderDTO accountHolderDTO = new AccountHolderDTO("Celia", "cacito", "cecece",
+                null,
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63",
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63");
+        String body = objectMapper.writeValueAsString(accountHolderDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-account-holder")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullPrimaryAddressField_badRequest() throws Exception {
+        AccountHolderDTO accountHolderDTO = new AccountHolderDTO("Celia", "cacito", "cecece",
+                LocalDate.of(1995, 9, 27),
+                null, "aqui", 23456, "wiwiwiwiwwi 63",
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63");
+        String body = objectMapper.writeValueAsString(accountHolderDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-account-holder")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isBadRequest()).andReturn();
+    }
+
+
+    @Test
+    void create_nullMailingAddressField_createdWithoutMailingAddress() throws Exception {
+        AccountHolderDTO accountHolderDTO = new AccountHolderDTO("Celia", "cacito", "cecece",
+                LocalDate.of(1995, 9, 27),
+                "Ezpania", "aqui", 23456, "wiwiwiwiwwi 63",
+                "Paisdeprueba", null, 12345, "wewewewewe 63");
+        String body = objectMapper.writeValueAsString(accountHolderDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-account-holder")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .with(user("pepito")
+                                .password("grillito")
+                                .roles("ADMIN"))
+        ).andExpect(status().isCreated()).andReturn();
+
+        System.out.println(result.getResponse().getContentAsString());
+
+        assertTrue(result.getResponse().getContentAsString().contains("Ezpania"));
+        assertFalse(result.getResponse().getContentAsString().contains("Paisdeprueba"));
+
     }
 
 }

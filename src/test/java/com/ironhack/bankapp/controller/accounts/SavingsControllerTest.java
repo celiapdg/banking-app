@@ -66,7 +66,7 @@ class SavingsControllerTest {
     }
 
     @Test
-    void create() throws Exception {
+    void create_twoOwners() throws Exception {
         List<AccountHolder> accountHolders = accountHolderRepository.findAll();
 
         SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
@@ -84,5 +84,230 @@ class SavingsControllerTest {
 
         assertTrue(result.getResponse().getContentAsString().contains("cecece"));
         assertTrue(result.getResponse().getContentAsString().contains("cacito"));
+    }
+
+
+    @Test
+    void create_noSecondaryOwner() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(200), accountHolders.get(0).getId(),
+                null, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isCreated()).andReturn();
+
+        System.out.println(result.getResponse().getContentAsString());
+
+        assertTrue(result.getResponse().getContentAsString().contains("cecece"));
+        assertFalse(result.getResponse().getContentAsString().contains("cacito"));
+    }
+
+
+    @Test
+    void create_wrongPrimaryOwnerID_notFound() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(200), accountHolders.get(0).getId()+123L,
+                null, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isNotFound()).andReturn();
+
+    }
+
+
+    @Test
+    void create_wrongSecondaryOwnerID_accountCreated() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(200), accountHolders.get(0).getId(),
+                accountHolders.get(1).getId()+123L, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isCreated()).andReturn();
+
+        System.out.println(result.getResponse().getContentAsString());
+
+        assertTrue(result.getResponse().getContentAsString().contains("cecece"));
+        assertFalse(result.getResponse().getContentAsString().contains("cacito"));
+    }
+
+
+    @Test
+    void create_negativeSecondaryOwnerID_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(200), accountHolders.get(0).getId(),
+                -123L, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+
+    @Test
+    void create_negativeBalance_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(-2000),
+                new BigDecimal(200), accountHolders.get(0).getId(),
+                null, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+
+    @Test
+    void create_nullPrimaryOwnerID_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(200), null,
+                accountHolders.get(0).getId(), "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+
+    @Test
+    void create_nullSecretKey_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(200), accountHolders.get(0).getId(),
+                null, null,
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+    @Test
+    void create_tooLowMinimumBalance_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(99), accountHolders.get(0).getId(),
+                null, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+    @Test
+    void create_tooHighMinimumBalance_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(1001), accountHolders.get(0).getId(),
+                null, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+
+    @Test
+    void create_negativeInterestRate_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(100), accountHolders.get(0).getId(),
+                null, "a4b5",
+                new BigDecimal(-0.001));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+
+    @Test
+    void create_tooHighInterestRate_badRequest() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(2000),
+                new BigDecimal(100), accountHolders.get(0).getId(),
+                null, "a4b5",
+                new BigDecimal(0.51));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isBadRequest()).andReturn();
+
+    }
+
+
+    @Test
+    void create_balanceUnderMinimum_underMinimumBalanceTrue() throws Exception {
+        List<AccountHolder> accountHolders = accountHolderRepository.findAll();
+
+        SavingsDTO savingsDTO = new SavingsDTO(new BigDecimal(200),
+                new BigDecimal(500), accountHolders.get(0).getId(),
+                null, "a4b5",
+                new BigDecimal(0.002));
+        String body = objectMapper.writeValueAsString(savingsDTO);
+        MvcResult result = mockMvc.perform(
+                post("/new-savings")
+                        .content(body)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isCreated()).andReturn();
+
+        assertTrue(savingsRepository.findAll().get(0).isBelowMinimumBalance());
+
+
     }
 }
