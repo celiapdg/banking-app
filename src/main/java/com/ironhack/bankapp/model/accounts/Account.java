@@ -45,6 +45,8 @@ public abstract class Account {
     @JsonIgnore
     protected List<Transaction> allTransactions;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -59,6 +61,38 @@ public abstract class Account {
         this.primaryOwner = primaryOwner;
         // Only primary owner. If there's a 2nd, we'll use its setter after creation
     }
+
+    /**------------------------Methods------------------------**/
+
+    /** get all transactions sorted by date (most recent first) */
+    public List<Transaction> getAllTransactions() {
+        List<Transaction> allTransactions = this.getTransactionReceived();
+        allTransactions.addAll(this.getTransactionSent());
+        Collections.sort(allTransactions, Comparator.comparing(Transaction::getTransactionDateTime).reversed());
+        return allTransactions;
+    }
+
+    /** checks if balance is more or equals to the amount provided*/
+    public Boolean hasEnoughFunds(Money amount){
+        if (this instanceof CreditCard){
+            return amount.getAmount().compareTo(this.getBalance().getAmount().add(((CreditCard) this).getCreditLimit().getAmount())) < 0;
+        }
+        return amount.getAmount().compareTo(this.getBalance().getAmount()) < 0;
+    }
+
+    public BigDecimal increaseBalance(Money amount){
+        return this.balance.increaseAmount(amount);
+    }
+
+    public BigDecimal decreaseBalance(Money amount){
+        return this.balance.decreaseAmount(amount);
+    }
+
+    public Boolean isFrozen(){
+        return this.isFrozen();
+    }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public Long getId() {
         return id;
@@ -112,32 +146,6 @@ public abstract class Account {
         this.transactionReceived = transactionReceived;
     }
 
-    /** get all transactions sorted by date (most recent first) */
-    public List<Transaction> getAllTransactions() {
-        List<Transaction> allTransactions = this.getTransactionReceived();
-        allTransactions.addAll(this.getTransactionSent());
-        Collections.sort(allTransactions, Comparator.comparing(Transaction::getTransactionDateTime).reversed());
-        return allTransactions;
-    }
 
-    /** checks if balance is more or equals to the amount provided*/
-    public Boolean hasEnoughFunds(Money amount){
-        if (this instanceof CreditCard){
-            return amount.getAmount().compareTo(this.getBalance().getAmount().add(((CreditCard) this).getCreditLimit().getAmount())) < 0;
-        }
-        return amount.getAmount().compareTo(this.getBalance().getAmount()) < 0;
-    }
-
-    public BigDecimal increaseBalance(Money amount){
-        return this.balance.increaseAmount(amount);
-    }
-
-    public BigDecimal decreaseBalance(Money amount){
-        return this.balance.decreaseAmount(amount);
-    }
-
-    public Boolean isFrozen(){
-        return this.isFrozen();
-    }
 
 }

@@ -53,6 +53,8 @@ public class AccountHolder extends User{
     @JsonIgnore
     private List<Account> allAccounts = new ArrayList<>();
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -76,6 +78,28 @@ public class AccountHolder extends User{
         // adds ACCOUNT_HOLDER role on creation
         this.addRole(new Role("ACCOUNT_HOLDER", this));
     }
+
+    /**------------------------Methods------------------------**/
+
+    /** returns all the accounts where this account holder is primary or secondary owner*/
+    public List<Account> getAllAccounts() {
+        List<Account> allAccounts = new ArrayList<Account>(this.getPrimaryAccounts());
+        allAccounts.addAll(this.getSecondaryAccounts());
+        return allAccounts;
+    }
+
+    /** checks if this account holder owns (as either primary or secondary owner) an account by its ID */
+    public Boolean isOwner(Long accountID){
+        List<Account> allAccounts = this.getAllAccounts();
+        for (Account account: allAccounts){
+            if (account.getId().equals(accountID)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public LocalDate getBirth() {
         return birth;
@@ -117,21 +141,5 @@ public class AccountHolder extends User{
         this.secondaryAccounts = secondaryAccounts;
     }
 
-    /** returns all the accounts where this account holder is primary or secondary owner*/
-    public List<Account> getAllAccounts() {
-        List<Account> allAccounts = new ArrayList<Account>(this.getPrimaryAccounts());
-        allAccounts.addAll(this.getSecondaryAccounts());
-        return allAccounts;
-    }
 
-    /** checks if this account holder owns (as either primary or secondary owner) an account by its ID */
-    public Boolean isOwner(Long accountID){
-        List<Account> allAccounts = this.getAllAccounts();
-        for (Account account: allAccounts){
-            if (account.getId().equals(accountID)){
-                return true;
-            }
-        }
-        return false;
-    }
 }

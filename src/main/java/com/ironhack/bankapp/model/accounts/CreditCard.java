@@ -32,6 +32,8 @@ public class CreditCard extends Account {
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate lastInterestDate;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -51,6 +53,15 @@ public class CreditCard extends Account {
         // default set-up:
         this.lastInterestDate = LocalDate.now();
     }
+
+    /**------------------------Methods------------------------**/
+
+    @Override
+    public Boolean isFrozen(){
+        return false;
+    }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public BigDecimal getInterestRate() {
         return interestRate;
@@ -76,8 +87,5 @@ public class CreditCard extends Account {
         this.lastInterestDate = lastInterestDate;
     }
 
-    @Override
-    public Boolean isFrozen(){
-        return false;
-    }
+
 }

@@ -1,5 +1,6 @@
 package com.ironhack.bankapp.utils;
 
+/** Regular expressions for name, username and password validation **/
 public class RegExp {
     public static final String VALID_NAME = "[\\p{L} .'-]+";
 

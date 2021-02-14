@@ -11,10 +11,13 @@ import com.ironhack.bankapp.model.users.ThirdParty;
 import com.ironhack.bankapp.model.users.User;
 import com.ironhack.bankapp.repository.TransactionRepository;
 import com.ironhack.bankapp.repository.accounts.AccountRepository;
+import com.ironhack.bankapp.repository.accounts.CheckingRepository;
+import com.ironhack.bankapp.repository.accounts.SavingsRepository;
+import com.ironhack.bankapp.repository.accounts.StudentCheckingRepository;
 import com.ironhack.bankapp.repository.users.AccountHolderRepository;
 import com.ironhack.bankapp.repository.users.ThirdPartyRepository;
 import com.ironhack.bankapp.repository.users.UserRepository;
-import com.ironhack.bankapp.service.interfaces.IAccountService;
+import com.ironhack.bankapp.service.interfaces.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -32,31 +35,39 @@ import java.util.Optional;
 public class AccountService implements IAccountService {
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
     @Autowired
-    AccountRepository accountRepository;
+    private AccountRepository accountRepository;
     @Autowired
-    AccountHolderRepository accountHolderRepository;
+    private StudentCheckingRepository studentCheckingRepository;
     @Autowired
-    CheckingService checkingService;
+    private CheckingRepository checkingRepository;
     @Autowired
-    SavingsService savingsService;
+    private SavingsRepository savingsRepository;
     @Autowired
-    CreditCardService creditCardService;
+    private AccountHolderRepository accountHolderRepository;
     @Autowired
-    ThirdPartyRepository thirdPartyRepository;
+    private ThirdPartyRepository thirdPartyRepository;
     @Autowired
-    TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository;
     @Autowired
-    FraudService fraudService;
+    private ICheckingService checkingService;
+    @Autowired
+    private ISavingsService savingsService;
+    @Autowired
+    private ICreditCardService creditCardService;
+    @Autowired
+    private IFraudService fraudService;
 
+    /** Check the balance of an account (if the user has permissions).
+     * Applies interests and fees if necessary, then returns the resulting balance
+     */
     public BalanceDTO checkBalance(Long id, Principal principal) {
         if (principal == null){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must log in to view account balance");
         }
 
         String username = principal.getName();
-
         Account account = accountRepository.findById(id).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
 
@@ -75,7 +86,8 @@ public class AccountService implements IAccountService {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot access this account info");
     }
 
-
+    /** Modify the balance of an account (if the user has permissions).
+     */
     public Money modifyBalance(Long id, String username, BalanceDTO balanceDTO) {
         isAdmin(username); // this will also check if the user exists
         Account account = checkAccountId(id);
@@ -83,32 +95,34 @@ public class AccountService implements IAccountService {
         account.setBalance(new Money(balanceDTO.getAmount()));
         account = accountRepository.save(checkIfPenaltyFeeApplies(account));
 
-        // todo: si quiero añadir la transferencia, tengo que comprobar si el balance ahora es mayor o menor
-
         return account.getBalance();
     }
 
 
-    /** TRANSACTION BETWEEN TWO ACCOUNTS **/
+    /** Transaction between two accounts **/
     public Transaction transfer(TransactionDTO transactionDTO, Principal principal) {
-        if (principal == null){
+        if (principal == null){ // The user must be logged in
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You must log in to view account balance");
         }
-        if (transactionDTO.getOriginId().equals(transactionDTO.getDestinationId())){
+        if (transactionDTO.getOriginId().equals(transactionDTO.getDestinationId())){ // Origin and destination account must be different
             throw new ResponseStatusException(HttpStatus.I_AM_A_TEAPOT, "Pa k kieres acer eso jaja saludos");
         }
 
         String username = principal.getName();
 
+        // The user must be an account holder
         AccountHolder accountHolder = accountHolderRepository.findByUsername(username).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Account holder not found"));
-
+        // Checks if the origin account exists, if it's frozen and if it has enough funds
         Account origin = checkValidOriginAccount(transactionDTO.getOriginId(), transactionDTO.getAmount());
+        // This account holder must own the origin account (as primary or secondary owner)
         if (!accountHolder.isOwner(transactionDTO.getOriginId())){
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this account");
         }
+        // Checks if the destination account exists, and if the name matches any of its owners
         Account destination = checkValidDestinationAccount(transactionDTO.getDestinationName(), transactionDTO.getDestinationId());
 
+        // Checking for fraud. If any of the accounts commit fraud, the transaction won't be completed and the account(s) is/are frozen
         Boolean originFraud = fraudService.checkFrauds(transactionDTO.getOriginId(), transactionDTO.getAmount());
         Boolean destinationFraud = fraudService.checkFrauds(transactionDTO.getDestinationId(), transactionDTO.getAmount());
         if (originFraud) freeze(origin);
@@ -118,6 +132,7 @@ public class AccountService implements IAccountService {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Account frozen due to abnormal activity");
         }
 
+        // Adjusts the balance and applies penalty fees if necessary
         origin.decreaseBalance(new Money(transactionDTO.getAmount()));
         origin = checkIfPenaltyFeeApplies(origin);
         destination.increaseBalance(new Money(transactionDTO.getAmount()));
@@ -129,20 +144,26 @@ public class AccountService implements IAccountService {
     }
 
 
-    /** TRANSACTION FROM ACCOUNT TO THIRD PARTY **/
+    /** Transaction from account to third party **/
     public Transaction withdraw(TransactionDTO transactionDTO, String hashedKey, Optional<String> secretKey) {
+        // Checks if the destination account exists, and if the name matches any of its owners
         Account origin = checkValidOriginAccount(transactionDTO.getOriginId(), transactionDTO.getAmount());
         checkAccountSecretKey(origin, secretKey);
+        // Check if third party exists, and if its key and name matches the provided info
         ThirdParty thirdParty = checkValidThirdParty(hashedKey, transactionDTO.getDestinationId());
         if (!thirdParty.getName().equals(transactionDTO.getDestinationName())){
             throw new ResponseStatusException(HttpStatus.EXPECTATION_FAILED, "Name provided does not match with the destination's name");
         }
+
+        // Checking for fraud. If the origin account commits fraud, the transaction won't be completed and the account is frozen
         Boolean originFraud = fraudService.checkFrauds(transactionDTO.getOriginId(), transactionDTO.getAmount());
         if (originFraud){
             freeze(origin);
             accountRepository.save(origin);
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Account frozen due to abnormal activity");
         }
+
+        // Adjust and save the new balance, apply fees if necessary
         origin.setBalance(new Money(origin.getBalance().decreaseAmount(transactionDTO.getAmount())));
         origin = checkIfPenaltyFeeApplies(origin);
         accountRepository.save(origin);
@@ -153,13 +174,15 @@ public class AccountService implements IAccountService {
     }
 
 
-    /** TRANSACTION FROM THIRD PARTY TO ACCOUNT **/
+    /** Transaction from third party to account **/
     public Transaction deposit(TransactionDTO transactionDTO, String hashedKey, Optional<String> secretKey) {
-
+        // Check if third party exists, and if its key matches the provided info
         checkValidThirdParty(hashedKey, transactionDTO.getOriginId());
+        // Checks if the destination account exists, and if the name matches any of its owners
         Account destination = checkValidDestinationAccount(transactionDTO.getDestinationName(), transactionDTO.getDestinationId());
         checkAccountSecretKey(destination, secretKey);
 
+        // Checking for fraud. If the destination account commits fraud, the transaction won't be completed and the account is frozen
         Boolean destinationFraud = fraudService.checkFrauds(transactionDTO.getDestinationId(), transactionDTO.getAmount());
         if (destinationFraud){
             freeze(destination);
@@ -167,6 +190,7 @@ public class AccountService implements IAccountService {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Account frozen due to abnormal activity");
         }
 
+        // Adjust and save the new balance, apply fees if necessary
         destination.setBalance(new Money(destination.getBalance().increaseAmount(transactionDTO.getAmount())));
         destination = checkIfPenaltyFeeApplies(destination);
         accountRepository.save(destination);
@@ -177,6 +201,7 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Checks if the account has just gone under minimum balance and applies penalty fee if so **/
     public Account checkIfPenaltyFeeApplies(Account account){
         Transaction transaction;
         if (account instanceof Savings){
@@ -201,6 +226,7 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Checks if an user exists and is an admin **/
     public boolean isAdmin(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User does not exist"));
@@ -208,6 +234,7 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Check if an user owns an account **/
     public boolean hasPermissions(String username, Account account) {
         if (isAdmin(username)) return true;
         if (account.getPrimaryOwner().getUsername().equals(username)) return true;
@@ -218,12 +245,14 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Checks if exists an account with the provided id **/
     public Account checkAccountId(Long id) {
         return accountRepository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
     }
 
 
+    /** Checks if the origin account exists, if it's frozen and has enough funds **/
     public Account checkValidOriginAccount(Long id, BigDecimal amount){
         Account account = checkAccountId(id);
 
@@ -236,6 +265,7 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Checks if the destination account exists and the name provided matches any of its owners' name **/
     public Account checkValidDestinationAccount(String name, Long id){
         Account account = checkAccountId(id);
         if (account.isFrozen()) {
@@ -246,6 +276,7 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Check if the third party exists and the has key matches **/
     public ThirdParty checkValidThirdParty(String hashedKey, Long id){
         ThirdParty thirdParty = thirdPartyRepository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Third party not found"));
@@ -257,6 +288,7 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Checks if the name provided matches any of the account owners' name **/
     public Account checkAccountName(Account account, String name){
         if (account.getPrimaryOwner().getName().equals(name)) {
             return account;
@@ -269,6 +301,7 @@ public class AccountService implements IAccountService {
     }
 
 
+    /** Checks if the account secret key matches the one provided **/
     public boolean checkAccountSecretKey(Account account, Optional<String> secretKey){
         String accountClass = account.getClass().getSimpleName();
 
@@ -296,6 +329,8 @@ public class AccountService implements IAccountService {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Wrong secret key");
     }
 
+
+    /** Freezes an account (if not a Credit Card)**/
     public void freeze(Account account){
         String accountClass = account.getClass().getSimpleName();
         switch (accountClass){
@@ -309,6 +344,31 @@ public class AccountService implements IAccountService {
                 ((Savings) account).setStatus(Status.FROZEN);
                 break;
         }
+    }
+
+
+    /** Unfreezes an account (if not a Credit Card)**/
+    public void unfreeze(Long id) {
+        Account account = accountRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+        if (account.isFrozen()){
+            String accountClass = account.getClass().getSimpleName();
+            switch (accountClass){
+                case "StudentChecking":
+                    ((StudentChecking) account).setStatus(Status.ACTIVE);
+                    studentCheckingRepository.save((StudentChecking) account);
+                    break;
+                case "Checking":
+                    ((Checking) account).setStatus(Status.ACTIVE);
+                    checkingRepository.save((Checking) account);
+                    break;
+                case "Savings":
+                    ((Savings) account).setStatus(Status.ACTIVE);
+                    savingsRepository.save((Savings) account);
+                    break;
+            }
+        }
+
     }
 
 }

@@ -13,6 +13,8 @@ public class CheckingDTO extends AccountDTO {
     @Pattern(regexp = VALID_PASSWORD, message = "Not a valid hash key")
     private String secretKey;
 
+    /**------------------------Constructors------------------------**/
+    
     /**
      * Default class constructor
      **/
@@ -31,6 +33,8 @@ public class CheckingDTO extends AccountDTO {
         this.secretKey = secretKey;
     }
 
+
+    /**------------------------Getters and Setters------------------------**/
 
     public String getSecretKey() {
         return secretKey;

@@ -51,9 +51,17 @@ public class AccountHolderDTO {
     @Size(max = 100)
     private String mailingStreet;
 
+    /**------------------------Constructors------------------------**/
+
+    /**
+     * Default class constructor
+     **/
     public AccountHolderDTO() {
     }
 
+    /**
+     * Class constructor specifying name, username, password, birth and primary address information
+     **/
     public AccountHolderDTO(@NotBlank @Pattern(regexp = VALID_NAME, message = "Not a valid name") @Size(max = 100) String name,
                             @NotBlank @Pattern(regexp = VALID_USERNAME, message = "Not a valid username") String username,
                             @NotBlank @Pattern(regexp = VALID_PASSWORD, message = "Not a valid password") String password,
@@ -72,6 +80,9 @@ public class AccountHolderDTO {
         this.primaryStreet = primaryStreet;
     }
 
+    /**
+     * Class constructor specifying name, username, password, birth and primary and mailing address information
+     **/
     public AccountHolderDTO(@NotBlank @Pattern(regexp = VALID_NAME, message = "Not a valid name") @Size(max = 100) String name,
                             @NotBlank @Pattern(regexp = VALID_USERNAME, message = "Not a valid username") String username,
                             @NotBlank @Pattern(regexp = VALID_PASSWORD, message = "Not a valid password") String password,
@@ -101,6 +112,8 @@ public class AccountHolderDTO {
             this.mailingStreet = mailingStreet;
         }
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public String getName() {
         return name;

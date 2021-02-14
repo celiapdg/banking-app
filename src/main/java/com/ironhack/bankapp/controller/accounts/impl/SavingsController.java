@@ -18,6 +18,7 @@ public class SavingsController {
     @Autowired
     private ISavingsService savingsService;
 
+    /** Create a new savings account. Only for admins **/
     @PostMapping("/new-savings")
     @ResponseStatus(HttpStatus.CREATED)
     public Savings create(@RequestBody @Valid SavingsDTO savingsDTO){

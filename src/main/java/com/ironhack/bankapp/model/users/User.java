@@ -22,6 +22,8 @@ public class User {
     @JsonIgnore
     protected Set<Role> roles = new HashSet<>();
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -36,6 +38,8 @@ public class User {
         this.username = username;
         setPassword(password);
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public Long getId() {
         return id;

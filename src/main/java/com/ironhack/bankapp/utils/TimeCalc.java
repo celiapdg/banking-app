@@ -5,6 +5,7 @@ import java.time.Period;
 
 public class TimeCalc {
 
+    /** Calculate years between a date and now **/
     public static int calculateYears(LocalDate date) {
         if (date != null) {
             return Period.between(date, LocalDate.now()).getYears();
@@ -13,6 +14,7 @@ public class TimeCalc {
         }
     }
 
+    /** Calculate months between a date and now **/
     public static int calculateMonths(LocalDate date) {
         if (date != null) {
             Integer years = Period.between(date, LocalDate.now()).getYears();

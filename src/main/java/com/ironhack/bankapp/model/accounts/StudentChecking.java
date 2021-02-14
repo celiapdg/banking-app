@@ -19,6 +19,8 @@ public class StudentChecking extends Account {
     @Enumerated(EnumType.STRING)
     protected Status status;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -36,6 +38,15 @@ public class StudentChecking extends Account {
         // default set-up:
         this.status = Status.ACTIVE;
     }
+
+    /**------------------------Methods------------------------**/
+
+    @Override
+    public Boolean isFrozen(){
+        return this.status.equals(Status.FROZEN);
+    }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public String getSecretKey() {
         return secretKey;
@@ -55,8 +66,4 @@ public class StudentChecking extends Account {
         this.status = status;
     }
 
-    @Override
-    public Boolean isFrozen(){
-        return this.status.equals(Status.FROZEN);
-    }
 }

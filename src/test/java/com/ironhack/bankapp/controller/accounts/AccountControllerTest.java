@@ -1128,4 +1128,42 @@ class AccountControllerTest {
 
         System.out.println(result.getResponse().getContentAsString());
     }
+
+
+    @Test
+    void unfreeze() throws Exception {
+        List<Account> accounts = accountRepository.findAll();
+        accountService.freeze(accounts.get(0));
+        accountRepository.save(accounts.get(0));
+        Admin admin = adminRepository.findAll().get(0);
+
+        MvcResult result = mockMvc.perform(
+                get("/unfreeze/"+accounts.get(0).getId())
+                        .with(user(admin.getUsername())
+                                .password(admin.getPassword())
+                                .roles("ADMIN")))
+                .andExpect(status().isNoContent()).andReturn();
+
+        assertFalse(accountRepository.findAll().get(0).isFrozen());
+    }
+
+    @Test
+    void unfreeze_noAdmin_forbidden() throws Exception {
+        List<Account> accounts = accountRepository.findAll();
+        accountService.freeze(accounts.get(0));
+        accountRepository.save(accounts.get(0));
+        Admin admin = adminRepository.findAll().get(0);
+
+        MvcResult result = mockMvc.perform(
+                get("/unfreeze/"+accounts.get(0).getId())
+                        .with(user(admin.getUsername())
+                                .password(admin.getPassword())
+                                .roles("ACCOUNT_HOLDER")))
+                .andExpect(status().isForbidden()).andReturn();
+
+        assertTrue(accountRepository.findAll().get(0).isFrozen());
+    }
+
+
+
 }

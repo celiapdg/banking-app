@@ -16,14 +16,24 @@ public class ThirdPartyDTO {
     @Pattern(regexp = VALID_PASSWORD, message = "Not a valid hash key")
     private String hashKey;
 
+    /**------------------------Constructors------------------------**/
+
+    /**
+     * Default class constructor
+     **/
     public ThirdPartyDTO() {
     }
 
+    /**
+     * Class constructor specifying name and hash key
+     **/
     public ThirdPartyDTO(@NotNull String name,
                          @NotNull @Pattern(regexp = VALID_PASSWORD, message = "Not a valid hash key") String hashKey) {
         this.name = name;
         this.hashKey = hashKey;
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public String getName() {
         return name;

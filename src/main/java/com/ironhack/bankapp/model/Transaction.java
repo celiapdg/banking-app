@@ -41,6 +41,8 @@ public class Transaction {
     @PastOrPresent
     private LocalDateTime transactionDateTime;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -63,6 +65,7 @@ public class Transaction {
         this.transactionDateTime = transactionDateTime;
     }
 
+    /**------------------------Getters and Setters------------------------**/
 
     public Long getId() {
         return id;

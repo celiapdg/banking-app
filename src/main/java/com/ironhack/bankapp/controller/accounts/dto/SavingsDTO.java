@@ -23,6 +23,8 @@ public class SavingsDTO extends AccountDTO {
     @DecimalMin(value = "0", message = "Interest rate shouldn't be a negative value")
     private BigDecimal interestRate;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -46,6 +48,8 @@ public class SavingsDTO extends AccountDTO {
         this.secretKey = secretKey;
         this.interestRate = interestRate;
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
 
     public BigDecimal getMinimumBalance() {

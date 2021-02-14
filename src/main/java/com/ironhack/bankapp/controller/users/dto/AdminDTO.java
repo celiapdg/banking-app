@@ -20,9 +20,17 @@ public class AdminDTO {
     @Pattern(regexp = VALID_PASSWORD, message = "Not a valid password")
     private String password;
 
+    /**------------------------Constructors------------------------**/
+
+    /**
+     * Default class constructor
+     **/
     public AdminDTO() {
     }
 
+    /**
+     * Class constructor specifying name, username and password
+     **/
     public AdminDTO(@NotBlank @Size(max = 100) @Pattern(regexp = VALID_NAME, message = "Not a valid name") String name,
                     @NotBlank @Pattern(regexp = VALID_USERNAME, message = "Not a valid username") String username,
                     @NotBlank @Pattern(regexp = VALID_PASSWORD, message = "Not a valid hash key") String password) {
@@ -30,6 +38,8 @@ public class AdminDTO {
         this.username = username;
         this.password = password;
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public String getName() {
         return name;

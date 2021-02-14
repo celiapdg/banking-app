@@ -12,6 +12,8 @@ import static com.ironhack.bankapp.utils.RegExp.VALID_NAME;
 @PrimaryKeyJoinColumn(name = "id")
 public class Admin extends User {
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/

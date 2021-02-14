@@ -36,6 +36,8 @@ public class Savings extends Account{
     @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate lastInterestDate;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -61,6 +63,14 @@ public class Savings extends Account{
         this.lastInterestDate = LocalDate.now();
     }
 
+    /**------------------------Methods------------------------**/
+
+    @Override
+    public Boolean isFrozen(){
+        return this.status.equals(Status.FROZEN);
+    }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public String getSecretKey() {
         return secretKey;
@@ -112,22 +122,6 @@ public class Savings extends Account{
         this.lastInterestDate = lastInterestDate;
     }
 
-    @Override
-    public Boolean isFrozen(){
-        return this.status.equals(Status.FROZEN);
-    }
 
-    @Override
-    public String toString() {
-        return "Savings{" +
-                "id=" + id +
-                ", balance=" + balance +
-                ", primaryOwner=" + primaryOwner +
-                ", secondaryOwner=" + secondaryOwner +
-                ", minimumBalance=" + minimumBalance +
-                ", status=" + status +
-                ", interestRate=" + interestRate +
-                ", lastInterestDate=" + lastInterestDate +
-                '}';
-    }
+
 }

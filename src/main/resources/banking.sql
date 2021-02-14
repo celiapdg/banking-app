@@ -5,7 +5,7 @@ USE banking;
 CREATE TABLE `user` (
   id BIGINT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255),
-  `password` VARCHAR(20),
+  `password` VARCHAR(255),
   username VARCHAR(36) UNIQUE,
   PRIMARY KEY (id)
 );
@@ -45,18 +45,16 @@ CREATE TABLE account_holder (
 
 CREATE TABLE third_party (
   id BIGINT NOT NULL AUTO_INCREMENT,
-  hash_key VARCHAR(6) NOT NULL,
+  hash_key VARCHAR(255) NOT NULL,
   `name` VARCHAR(255) NOT NULL,
   PRIMARY KEY (id)
 );
 
 
 CREATE TABLE `account` (
-  id BIGINT NOT NULL,
+  id BIGINT NOT NULL AUTO_INCREMENT,
   balance_amount DECIMAL(19,2),
   balance_currency VARCHAR(255),
-  penalty_fee_amount DECIMAL(19,2),
-  penalty_fee_currency VARCHAR(255),
   primary_owner_id BIGINT NOT NULL,
   secondary_owner_id BIGINT,
   PRIMARY KEY (id),
@@ -66,8 +64,8 @@ CREATE TABLE `account` (
 
 
 CREATE TABLE student_checking (
-  id BIGINT NOT NULL,
-  secret_key VARCHAR(4),
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  secret_key VARCHAR(255),
   `status` VARCHAR(255),
   PRIMARY KEY (id),
   FOREIGN KEY (id) REFERENCES `account` (id)
@@ -75,46 +73,49 @@ CREATE TABLE student_checking (
 
 
 CREATE TABLE checking (
-  id BIGINT NOT NULL,
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  secret_key VARCHAR(255),
+  `status` VARCHAR(255),
   below_minimum_balance BOOLEAN NOT NULL,
   last_maintenance_date DATE NOT NULL,
   PRIMARY KEY (id),
-  FOREIGN KEY (id) REFERENCES student_checking (id)
+  FOREIGN KEY (id) REFERENCES `account` (id)
 );
 
 
 CREATE TABLE credit_card (
-  id bigint NOT NULL,
+  id bigint NOT NULL AUTO_INCREMENT,
   credit_limit_amount DECIMAL(19,2),
   credit_limit_currency VARCHAR(255),
   interest_rate DECIMAL(19,2) NOT NULL,
+  last_interest_date DATE NOT NULL,
   PRIMARY KEY (id),
   FOREIGN KEY (id) REFERENCES `account` (id)
 );
 
 
 CREATE TABLE savings (
-  id BIGINT NOT NULL,
+  id BIGINT NOT NULL AUTO_INCREMENT,
   below_minimum_balance BOOLEAN NOT NULL,
   interest_rate DECIMAL(19,2) NOT NULL,
   last_interest_date DATE NOT NULL,
   monthly_maintenance_fee_amount DECIMAL(19,2),
   monthly_maintenance_fee_currency VARCHAR(255),
-  secret_key VARCHAR(4),
+  secret_key VARCHAR(255),
   `status` VARCHAR(255),
   PRIMARY KEY (id),
   FOREIGN KEY (id) REFERENCES `account` (id)
 );
 
 CREATE TABLE `transaction` (
-    id BIGINT NOT NULL,
-    origin_id BIGINT NOT NULL,
-    destination_id BIGINT NOT NULL,
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    origin_id BIGINT,
+    destination_id BIGINT,
     transaction_amount DECIMAL(19,2) NOT NULL,
     transaction_currency VARCHAR(255),
+    concept VARCHAR(255),
     transaction_date_time DATETIME,
     PRIMARY KEY (id),
     FOREIGN KEY (origin_id) REFERENCES `account` (id),
     FOREIGN KEY (destination_id) REFERENCES `account` (id)
 );
-    

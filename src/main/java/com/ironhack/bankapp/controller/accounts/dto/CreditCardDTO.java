@@ -21,6 +21,8 @@ public class CreditCardDTO extends AccountDTO {
     @DecimalMin(value = "100", message = "Minimum credit limit is 100")
     private BigDecimal creditLimit; // default 100
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -54,6 +56,8 @@ public class CreditCardDTO extends AccountDTO {
         this.interestRate = interestRate;
         this.creditLimit = creditLimit;
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public BigDecimal getInterestRate() {
         return interestRate;

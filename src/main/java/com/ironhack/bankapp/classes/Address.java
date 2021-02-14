@@ -11,9 +11,17 @@ public class Address {
     private Integer postalCode;
     private String street;
 
+    /**------------------------Constructors------------------------**/
+
+    /**
+     * Default class constructor
+     **/
     public Address() {
     }
 
+    /**
+     * class constructor specifying country, city, postal code and street
+     **/
     public Address(String country,
                    String city,
                    Integer postalCode,
@@ -23,6 +31,9 @@ public class Address {
         this.postalCode = postalCode;
         this.street = street;
     }
+
+
+    /**------------------------Getters and Setters------------------------**/
 
     public String getCountry() {
         return country;

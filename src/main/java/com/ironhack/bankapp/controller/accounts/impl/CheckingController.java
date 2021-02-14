@@ -18,6 +18,7 @@ public class CheckingController {
     @Autowired
     ICheckingService checkingService;
 
+    /** Create a new checking or student checking account. Only for admins **/
     @PostMapping("/new-checking")
     @ResponseStatus(HttpStatus.CREATED)
     public Account create(@RequestBody @Valid CheckingDTO checkingDTO){

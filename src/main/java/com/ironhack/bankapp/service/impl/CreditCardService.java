@@ -2,8 +2,10 @@ package com.ironhack.bankapp.service.impl;
 
 import com.ironhack.bankapp.classes.Money;
 import com.ironhack.bankapp.controller.accounts.dto.CreditCardDTO;
+import com.ironhack.bankapp.model.Transaction;
 import com.ironhack.bankapp.model.accounts.CreditCard;
 import com.ironhack.bankapp.model.users.AccountHolder;
+import com.ironhack.bankapp.repository.TransactionRepository;
 import com.ironhack.bankapp.repository.accounts.CreditCardRepository;
 import com.ironhack.bankapp.repository.users.AccountHolderRepository;
 import com.ironhack.bankapp.service.interfaces.ICreditCardService;
@@ -15,6 +17,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,10 +26,12 @@ public class CreditCardService implements ICreditCardService {
 
     @Autowired
     private AccountHolderRepository accountHolderRepository;
-
     @Autowired
     private CreditCardRepository creditCardRepository;
+    @Autowired
+    private TransactionRepository transactionRepository;
 
+    /** Creates a Credit Card account **/
     public CreditCard create(CreditCardDTO creditCardDTO) {
         AccountHolder primaryOwner = accountHolderRepository.findById(creditCardDTO.getPrimaryId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found"));
@@ -34,6 +40,7 @@ public class CreditCardService implements ICreditCardService {
                 primaryOwner, creditCardDTO.getInterestRate(),
                 new Money(creditCardDTO.getCreditLimit()));
 
+        // secondary owner check
         if (creditCardDTO.getSecondaryId()!=null){
             Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(creditCardDTO.getSecondaryId());
             secondaryOwner.ifPresent(account::setSecondaryOwner);
@@ -42,18 +49,23 @@ public class CreditCardService implements ICreditCardService {
 
     }
 
+    /** Applies interests if necessary **/
     public CreditCard applyInterest(CreditCard creditCard){
         Integer interestsRemaining = TimeCalc.calculateMonths(creditCard.getLastInterestDate());
-        creditCard.setLastInterestDate(creditCard.getLastInterestDate().plusMonths(interestsRemaining));
 
         BigDecimal interestRate = creditCard.getInterestRate()
                                             .divide(new BigDecimal(12))
                                             .setScale(4, RoundingMode.HALF_UP);
+        List<Transaction> monthlyInterests = new ArrayList<>();
         while (interestsRemaining > 0){
+            creditCard.setLastInterestDate(creditCard.getLastInterestDate().plusMonths(1));
+            monthlyInterests.add(new Transaction(null, creditCard,
+                    new Money(creditCard.getBalance().getAmount().multiply(interestRate)),
+                    "Monthly interests", creditCard.getLastInterestDate().atTime(0,0)));
             creditCard.increaseBalance(new Money(creditCard.getBalance().getAmount().multiply(interestRate)));
-            // todo: si quiero poner transferencias a todo, aquí iría una
             interestsRemaining--;
         }
+        transactionRepository.saveAll(monthlyInterests);
         return creditCardRepository.save(creditCard);
     }
 }

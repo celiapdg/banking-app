@@ -18,7 +18,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +36,8 @@ public class CheckingService implements ICheckingService {
     @Autowired
     private TransactionRepository transactionRepository;
 
+
+    /** Creates a Checking or Student Checking account **/
     public Account create(CheckingDTO checkingDTO) {
         AccountHolder primaryOwner = accountHolderRepository.findById(checkingDTO.getPrimaryId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Primary account owner not found"));
@@ -50,7 +51,7 @@ public class CheckingService implements ICheckingService {
             account = new StudentChecking(new Money(checkingDTO.getBalance()),
                     primaryOwner, checkingDTO.getSecretKey());
         }
-
+        // secondary owner check
         if (checkingDTO.getSecondaryId()!=null){
             Optional<AccountHolder> secondaryOwner = accountHolderRepository.findById(checkingDTO.getSecondaryId());
             secondaryOwner.ifPresent(account::setSecondaryOwner);
@@ -65,6 +66,7 @@ public class CheckingService implements ICheckingService {
     }
 
 
+    /** Applies the monthly fee if necessary **/
     public Checking applyMonthlyFee(Checking checking){
         // frozen accounts cannot modify its balance
         if (checking.isFrozen()) return checking;
@@ -78,7 +80,7 @@ public class CheckingService implements ICheckingService {
                                     "Maintenance fee", checking.getLastMaintenanceDate().atTime(0,0)));
             feesRemaining--;
         }
-        System.out.println(checking.getBalance());
+        transactionRepository.saveAll(monthlyFees);
         checking = (Checking) accountService.checkIfPenaltyFeeApplies(checking);
         return checkingRepository.save(checking);
     }

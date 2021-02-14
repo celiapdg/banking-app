@@ -16,6 +16,7 @@ public class AccountHolderService implements IAccountHolderService {
     @Autowired
     AccountHolderRepository accountHolderRepository;
 
+    /** Creates an account holder **/
     public AccountHolder create(AccountHolderDTO accountHolderDTO) {
 
         Address primaryAddress = new Address(accountHolderDTO.getPrimaryCountry(),
@@ -32,8 +33,6 @@ public class AccountHolderService implements IAccountHolderService {
                 accountHolderDTO.getUsername(),
                 accountHolderDTO.getPassword(),
                 accountHolderDTO.getBirth(), primaryAddress, mailingAddress);
-
-        accountHolder.addRole(new Role("USER", accountHolder));
 
         return accountHolderRepository.save(accountHolder);
     }

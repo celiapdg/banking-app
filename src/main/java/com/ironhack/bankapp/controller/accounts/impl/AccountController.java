@@ -17,37 +17,49 @@ import java.util.Optional;
 public class AccountController {
 
     @Autowired
-    IAccountService accountService;
+    private IAccountService accountService;
 
+    /** Check the balance from one account. Only for admins and account owners **/
     @GetMapping("/check-balance/{id}")
     @ResponseStatus(HttpStatus.OK)
     public BalanceDTO checkBalance(@PathVariable Long id, Principal principal){
         return accountService.checkBalance(id, principal);
     }
 
+    /** Modify the balance from one account. Only for admins **/
     @PatchMapping("/modify-balance/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Money modifyBalance(@PathVariable Long id, Principal principal, @RequestBody @Valid BalanceDTO balanceDTO){
         return accountService.modifyBalance(id, principal.getName(), balanceDTO);
     }
 
+    /** Transfer money from one account to another. Only for account holders (origin account owners) **/
     @PostMapping("/transfer")
     @ResponseStatus(HttpStatus.CREATED)
     public Transaction transfer(@RequestBody @Valid TransactionDTO transactionDTO, Principal principal){
         return accountService.transfer(transactionDTO, principal);
     }
 
+    /** Send money from an account to a third party. Secret and hash keys are needed **/
     @PostMapping("/withdraw/{hashedKey}")
-    @ResponseStatus(HttpStatus.CREATED) // origin: account // destination: third party
+    @ResponseStatus(HttpStatus.CREATED)
     public Transaction withdraw(@RequestBody @Valid TransactionDTO transactionDTO,
                                 @PathVariable String hashedKey, @RequestParam Optional<String> secretKey){
         return accountService.withdraw(transactionDTO, hashedKey, secretKey);
     }
 
+    /** Send money from a third party to an account. Secret and hash keys are needed **/
     @PostMapping("/deposit/{hashedKey}")
-    @ResponseStatus(HttpStatus.CREATED) // origin: third party // destination: account
+    @ResponseStatus(HttpStatus.CREATED)
     public Transaction deposit(@RequestBody @Valid TransactionDTO transactionDTO,
-                                @PathVariable String hashedKey, @RequestParam Optional<String> secretKey){
+                               @PathVariable String hashedKey, @RequestParam Optional<String> secretKey){
         return accountService.deposit(transactionDTO, hashedKey, secretKey);
+    }
+
+    /** Unfreeze an account. Only for admins **/
+    @GetMapping("/unfreeze/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void unfreeze(@PathVariable Long id){
+        accountService.unfreeze(id);
     }
 }

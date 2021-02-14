@@ -38,6 +38,8 @@ public class Checking extends Account {
 
     private boolean belowMinimumBalance;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -58,10 +60,14 @@ public class Checking extends Account {
         this.lastMaintenanceDate = LocalDate.now();
     }
 
+    /**------------------------Methods------------------------**/
+
     @Override
-    public void setBalance(Money balance) {
-        super.setBalance(balance);
+    public Boolean isFrozen(){
+        return this.status.equals(Status.FROZEN);
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public Money getMinimumBalance() {
         return minimumBalance;
@@ -109,9 +115,6 @@ public class Checking extends Account {
         this.lastMaintenanceDate = lastMaintenanceDate;
     }
 
-    @Override
-    public Boolean isFrozen(){
-        return this.status.equals(Status.FROZEN);
-    }
+
 
 }

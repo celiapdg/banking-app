@@ -9,6 +9,8 @@ public class BalanceDTO {
     @NotNull
     private BigDecimal amount;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -21,6 +23,9 @@ public class BalanceDTO {
     public BalanceDTO(@NotNull @DecimalMin(value = "0", message = "Minimum balance is 0") BigDecimal amount) {
         this.amount = amount;
     }
+
+
+    /**------------------------Getters and Setters------------------------**/
 
     public BigDecimal getAmount() {
         return amount;

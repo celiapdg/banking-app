@@ -16,7 +16,8 @@ public class ThirdPartyService implements IThirdPartyService {
     @Autowired
     ThirdPartyRepository thirdPartyRepository;
 
-    public ThirdParty create(@RequestBody @Valid ThirdPartyDTO thirdPartyDTO){
+    /** Creates a Credit Card account **/
+    public ThirdParty create(ThirdPartyDTO thirdPartyDTO){
         return thirdPartyRepository.save(new ThirdParty(thirdPartyDTO.getName(), thirdPartyDTO.getHashKey()));
     }
 }

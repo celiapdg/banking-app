@@ -5,4 +5,5 @@ import com.ironhack.bankapp.model.accounts.CreditCard;
 
 public interface ICreditCardService {
     CreditCard create(CreditCardDTO creditCardDTO);
+    CreditCard applyInterest(CreditCard creditCard);
 }

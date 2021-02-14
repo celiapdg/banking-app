@@ -18,6 +18,7 @@ public class AdminController {
     @Autowired
     IAdminService adminService;
 
+    /** Create a new admin. Only for admins **/
     @PostMapping("/new-admin")
     @ResponseStatus(HttpStatus.CREATED)
     public Admin create(@RequestBody @Valid AdminDTO adminDTO){

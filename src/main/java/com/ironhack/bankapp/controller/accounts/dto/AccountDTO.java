@@ -17,6 +17,9 @@ public class AccountDTO {
     @Min(1)
     private Long secondaryId; //secondary owner
 
+
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -33,6 +36,9 @@ public class AccountDTO {
         this.primaryId = primaryId;
         this.secondaryId = secondaryId;
     }
+
+
+    /**------------------------Getters and Setters------------------------**/
 
     public BigDecimal getBalance() {
         return balance;

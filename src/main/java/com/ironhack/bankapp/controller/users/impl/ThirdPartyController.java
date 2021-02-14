@@ -17,6 +17,7 @@ public class ThirdPartyController {
     @Autowired
     IThirdPartyService thirdPartyService;
 
+    /** Create a new third party. Only for admins **/
     @PostMapping("/new-third-party")
     @ResponseStatus(HttpStatus.CREATED)
     public ThirdParty create(@RequestBody @Valid ThirdPartyDTO thirdPartyDTO){

@@ -21,6 +21,8 @@ public class TransactionDTO {
     @NotNull
     private String concept;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
@@ -42,6 +44,8 @@ public class TransactionDTO {
         this.amount = amount;
         this.concept = concept;
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public Long getOriginId() {
         return originId;

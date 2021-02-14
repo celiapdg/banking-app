@@ -13,6 +13,7 @@ public class AdminService implements IAdminService {
     @Autowired
     AdminRepository adminRepository;
 
+    /** Creates an admin **/
     public Admin create(AdminDTO adminDTO) {
         return adminRepository.save(new Admin(adminDTO.getName(),
                                               adminDTO.getUsername(),

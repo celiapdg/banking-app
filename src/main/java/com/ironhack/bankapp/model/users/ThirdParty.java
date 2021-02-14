@@ -22,14 +22,24 @@ public class ThirdParty {
     protected String name;
     private String hashKey;
 
+    /**------------------------Constructors------------------------**/
+
+    /**
+     * Default class constructor
+     **/
     public ThirdParty() {
     }
 
+    /**
+     * Class constructor specifying name and hash key.
+     **/
     public ThirdParty(String name,
                       String hashKey) {
         this.name = name;
         setHashKey(hashKey);
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public Long getId() {
         return id;

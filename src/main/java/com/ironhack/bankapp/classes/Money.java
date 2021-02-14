@@ -14,10 +14,11 @@ public class Money {
     private final Currency currency;
     private BigDecimal amount;
 
+    /**------------------------Constructors------------------------**/
+
     /**
      * Default class constructor
      **/
-
     public Money() {
         currency = Currency.getInstance("EUR");
     }
@@ -25,7 +26,6 @@ public class Money {
     /**
      * Class constructor specifying amount, currency, and rounding
      **/
-
     public Money(BigDecimal amount, Currency currency, RoundingMode rounding) {
         this.currency = currency;
         setAmount(amount.setScale(currency.getDefaultFractionDigits(), rounding));
@@ -44,6 +44,8 @@ public class Money {
     public Money(BigDecimal amount) {
         this(amount, EUR, DEFAULT_ROUNDING);
     }
+
+    /**------------------------Methods------------------------**/
 
     public BigDecimal increaseAmount(Money money) {
         setAmount(this.amount.add(money.amount));
@@ -64,6 +66,8 @@ public class Money {
         setAmount(this.amount.subtract(addAmount));
         return this.amount;
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public Currency getCurrency() {
         return this.currency;

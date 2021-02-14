@@ -5,4 +5,5 @@ import com.ironhack.bankapp.model.accounts.Savings;
 
 public interface ISavingsService {
     Savings create(SavingsDTO savingsDTO);
+    Savings applyInterest(Savings savings);
 }

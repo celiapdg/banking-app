@@ -18,6 +18,7 @@ public class CreditCardController {
     @Autowired
     ICreditCardService creditCardService;
 
+    /** Create a new credit card account. Only for admins **/
     @PostMapping("/new-credit-card")
     @ResponseStatus(HttpStatus.CREATED)
     public CreditCard create(@RequestBody @Valid CreditCardDTO creditCardDTO){

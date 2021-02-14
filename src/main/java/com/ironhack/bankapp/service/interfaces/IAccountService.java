@@ -52,4 +52,6 @@ public interface IAccountService {
 
     public void freeze(Account account);
 
+    public void unfreeze(Long id);
+
 }

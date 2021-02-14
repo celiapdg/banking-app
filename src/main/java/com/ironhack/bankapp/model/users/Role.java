@@ -12,13 +12,23 @@ public class Role {
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 
+    /**------------------------Constructors------------------------**/
+
+    /**
+     * Default class constructor
+     **/
     public Role() {
     }
 
+    /**
+     * Class constructor specifying name and the user
+     **/
     public Role(String name, User user) {
         this.name = name;
         this.user = user;
     }
+
+    /**------------------------Getters and Setters------------------------**/
 
     public Long getId() {
         return id;
