@@ -57,7 +57,7 @@ public class AccountController {
     }
 
     /** Unfreeze an account. Only for admins **/
-    @GetMapping("/unfreeze/{id}")
+    @PatchMapping("/unfreeze/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void unfreeze(@PathVariable Long id){
         accountService.unfreeze(id);

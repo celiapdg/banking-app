@@ -1138,7 +1138,7 @@ class AccountControllerTest {
         Admin admin = adminRepository.findAll().get(0);
 
         MvcResult result = mockMvc.perform(
-                get("/unfreeze/"+accounts.get(0).getId())
+                patch("/unfreeze/"+accounts.get(0).getId())
                         .with(user(admin.getUsername())
                                 .password(admin.getPassword())
                                 .roles("ADMIN")))
@@ -1155,7 +1155,7 @@ class AccountControllerTest {
         Admin admin = adminRepository.findAll().get(0);
 
         MvcResult result = mockMvc.perform(
-                get("/unfreeze/"+accounts.get(0).getId())
+                patch("/unfreeze/"+accounts.get(0).getId())
                         .with(user(admin.getUsername())
                                 .password(admin.getPassword())
                                 .roles("ACCOUNT_HOLDER")))
